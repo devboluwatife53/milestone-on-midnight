@@ -103,7 +103,11 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 ## Deployed contract
 
 - Network: **Preview**
-- Contract address: `<filled in after deploy — see screenshots/deploy.png>`
+- Contract address: `4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd`
+- Verify independently at any time (no wallet needed, reads the indexer directly):
+  ```bash
+  CONTRACT_ADDRESS=4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd npm run status:preview
+  ```
 
 ## Screenshots
 

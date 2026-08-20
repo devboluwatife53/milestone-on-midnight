@@ -61,9 +61,9 @@ globalThis.WebSocket = WebSocket;
 
 const milestoneCompiledContract = CompiledContract.make(
   "milestone",
-  Milestone.Contract,
+  Milestone.Contract<MilestonePrivateState>,
 ).pipe(
-  CompiledContract.withVacantWitnesses,
+  CompiledContract.withWitnesses(witnesses),
   CompiledContract.withCompiledFileAssets(contractConfig.zkConfigPath),
 );
 

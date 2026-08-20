@@ -7,3 +7,5 @@ dist/
 *.seed
 wallet-secrets.json
 .compact-cache/
+cli/midnight-level-db/
+cli/logs/
