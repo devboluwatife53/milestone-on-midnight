@@ -1,2 +1,2 @@
-export * from "./managed/milestone/contract/index.js";
+export * as Milestone from "./managed/milestone/contract/index.js";
 export * from "./witnesses.js";
