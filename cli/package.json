@@ -6,6 +6,7 @@
   "scripts": {
     "proof-server": "docker compose -f proof-server.yml up",
     "deploy:preview": "node --no-warnings --loader ts-node/esm src/deploy-preview.ts",
+    "contribute:preview": "node --no-warnings --loader ts-node/esm src/contribute-preview.ts",
     "status:preview": "node --no-warnings --loader ts-node/esm src/join-preview.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
