@@ -103,7 +103,7 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 ## Deployed contract
 
 - Network: **Preview**
-- Contract address: `4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd`
+- Contract address: [`4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd`](https://preview.midnightexplorer.com/contracts/4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd) — view live on Midnight Explorer
 - Verify independently at any time (no wallet needed, reads the indexer directly):
   ```bash
   CONTRACT_ADDRESS=4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd npm run status:preview
@@ -111,7 +111,10 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 
 ## Screenshots
 
-- `screenshots/compile.png` — `compact compile` output listing the compiled
-  circuits and the generated `managed/` tree (zkir + prover/verifier keys).
-- `screenshots/deploy.png` — `npm run deploy:preview` output showing the
-  wallet funding step and the resulting on-chain contract address.
+**`compact compile` + test output** — compiled circuits and the generated `managed/` tree (zkir + prover/verifier keys):
+
+![compact compile output](screenshots/compile.png)
+
+**`npm run deploy:preview` output** — wallet funding and the resulting on-chain contract address:
+
+![deploy to Preview output](screenshots/deploy.png)
