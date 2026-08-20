@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.local
+*.seed
+wallet-secrets.json
+.compact-cache/

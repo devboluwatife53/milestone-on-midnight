@@ -1,0 +1,56 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ======================================================================
+// Public ledger state — readable by anyone on chain.
+// ======================================================================
+export ledger owner: Bytes<32>;
+export ledger milestonesReached: Counter;
+export ledger lastDisclosedTotal: Uint<64>;
+
+constructor(ownerPublicKey: Bytes<32>) {
+  owner = disclose(ownerPublicKey);
+  lastDisclosedTotal = 0;
+}
+
+// ======================================================================
+// Witnesses — private, off-chain state never written to the ledger.
+// ======================================================================
+witness localSecretKey(): Bytes<32>;
+witness addToHiddenTotal(amount: Uint<64>): Uint<64>;
+
+// ======================================================================
+// Circuits
+// ======================================================================
+
+// Anyone can contribute a private amount. The amount itself is never
+// written to the ledger. Only when the cumulative hidden total crosses
+// the next milestone boundary do we deliberately disclose() that
+// cumulative value and bump the public milestone counter.
+export circuit contribute(amount: Uint<64>): [] {
+  assert(amount > 0, "Contribution must be positive");
+  const milestoneStep: Uint<64> = 100;
+  const newTotal = addToHiddenTotal(amount);
+  const nextThreshold = ((milestonesReached as Field as Uint<64>) + 1) * milestoneStep;
+  const crossed = disclose(newTotal >= nextThreshold);
+  if (crossed) {
+    lastDisclosedTotal = disclose(newTotal);
+    milestonesReached.increment(1);
+  }
+}
+
+// Only the owner, proving knowledge of the secret key that hashes to
+// `owner`, can reset the public milestone counter.
+export circuit resetMilestones(): [] {
+  assert(
+    owner == publicKey(localSecretKey()),
+    "Only the owner can reset milestones"
+  );
+  milestonesReached.resetToDefault();
+  lastDisclosedTotal = 0;
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "milestone:pk:"), sk]);
+}

@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["src/milestone.compact", "compiler/standard-library.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAWA;;;;;;;;;;;;;;;;MAmBA,AAAA,UAUC;;;;;cAVyB,QAAgB;;;;;;;;;;;;;;;;;;yCAAhB,QAAgB;;;;;;;uEAAhB,QAAgB;;;OAUzC;MAID,AAAA,eAOC;;;;;;;;;;;;;;;;;;;;;;OAAA;MAED,AAAA,SAEC;;OAAA;;;;;;;;;;GAzCA;EAHD;;;;;UAAY,gBAAyB;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAJrC;;;;;;;;;yEAA+B;IAC/B;;;;;;;;;yEAAyC;IACzC;;;;;;;;;yEAA2C;IAGzC;;;;;;;2HAAiB,gBAAc;;yEAA1B;UACL,KAAkB;IAAlB;;;;;;;2HAAA,KAAkB;;yEAAA;;;;;;;GACnB;ECdD,AAAA,kBAAA;oEAAA;;;EDmBA,AAAA,iBAAoC;;0DAApC,cAAoC;;;;;;;;;;;;;;GAAA;EACpC,AAAA,mBAAqD,4BAA5B,QAAgB;;0DAAzC,gBAAqD;2EAA5B,QAAgB;;;;;;;;;;;;;;GAAY;EAUrD,AAAA,aAUC,4BAVyB,QAAgB;4BACjC,QAAM;UACP,eAA6B;UAC7B,UAAmC;;gDAAP,QAAM;UAClC,eAA8E;;;;;wDAA5D;;;;;;;;;;;6HAAiB;;;;4BAA8B,eAAa;UAC9E,SAA6C,GAA1B,UAAQ,IAAI,eAAa;QAC9C,SAAO;MACT;;;;;;;6HAA8B,UAAQ;;2EAApB;YAClB,KAAiB;MAAjB;;;;;;;;;;+FAAA,KAAiB;;;;0EAAA;;;GAEpB;EAID,AAAA,kBAOC;kEALG;;;;;;;;;;;uIAAK;;;;IAGP;;;;;;;;;yEAAiB;UACjB,KAAkB;IAAlB;;;;;;;2HAAA,KAAkB;;yEAAA;;GACnB;EAED,AAAA,YAEC,CAFwB,IAAa;;mCACmC,IAAE;GAC1E;;;;;;;;;;;;;;;;;;;;IAhDD;qCAAA;;;;;;;;;;;0GAA+B;KAAA;IAC/B;qCAAA;;;;;;;;;;;0GAAyC;KAAA;IACzC;qCAAA;;;;;;;;;;;0GAA2C;KAAA;;;;;;;;;;;EA4C3C,AAAA,SAEC;;;;UAFwB,IAAa;;;;;;;;uCAAb,IAAa;GAErC;;;;"
+}
