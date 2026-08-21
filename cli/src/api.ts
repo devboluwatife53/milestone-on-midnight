@@ -318,10 +318,14 @@ export const buildWalletAndWaitForFunds = async (
 ${DIV}
   Unshielded Address (send tNight here):
   ${unshieldedKeystore.getBech32Address()}
-
-  Fund this wallet from the Preview faucet:
-  https://faucet.preview.midnight.network/
-${DIV}
+${
+  config.faucet
+    ? `
+  Fund this wallet from the faucet:
+  ${config.faucet}
+`
+    : ""
+}${DIV}
 `);
 
   console.log("  Syncing with network...");

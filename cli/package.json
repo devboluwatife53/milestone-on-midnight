@@ -8,6 +8,9 @@
     "deploy:preview": "node --no-warnings --loader ts-node/esm src/deploy-preview.ts",
     "contribute:preview": "node --no-warnings --loader ts-node/esm src/contribute-preview.ts",
     "status:preview": "node --no-warnings --loader ts-node/esm src/join-preview.ts",
+    "deploy:preprod": "node --no-warnings --loader ts-node/esm src/deploy-preprod.ts",
+    "contribute:preprod": "node --no-warnings --loader ts-node/esm src/contribute-preprod.ts",
+    "status:preprod": "node --no-warnings --loader ts-node/esm src/join-preprod.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

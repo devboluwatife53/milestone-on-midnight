@@ -22,6 +22,7 @@ export interface Config {
   readonly indexerWS: string;
   readonly node: string;
   readonly proofServer: string;
+  readonly faucet?: string;
 }
 
 export class StandaloneConfig implements Config {
@@ -39,7 +40,19 @@ export class PreviewConfig implements Config {
   indexerWS = "wss://indexer.preview.midnight.network/api/v3/graphql/ws";
   node = "https://rpc.preview.midnight.network";
   proofServer = "http://127.0.0.1:6300";
+  faucet = "https://faucet.preview.midnight.network/";
   constructor() {
     setNetworkId("preview");
+  }
+}
+
+export class PreprodConfig implements Config {
+  indexer = "https://indexer.preprod.midnight.network/api/v4/graphql";
+  indexerWS = "wss://indexer.preprod.midnight.network/api/v4/graphql/ws";
+  node = "https://rpc.preprod.midnight.network";
+  proofServer = "http://127.0.0.1:6300";
+  faucet = "https://faucet.preprod.midnight.network/";
+  constructor() {
+    setNetworkId("preprod");
   }
 }
