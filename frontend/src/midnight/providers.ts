@@ -41,22 +41,16 @@ const buildWalletAndMidnightProvider = async (
     balanceTx: async (tx: UnboundTransaction): Promise<FinalizedTransaction> => {
       const txHex = toHex(tx.serialize());
       const { tx: balancedHex } = await api.balanceUnsealedTransaction(txHex);
-      return Transaction.deserialize(
-        "signature",
-        "proof",
-        "binding",
-        fromHex(balancedHex),
-      ) as unknown as FinalizedTransaction;
+      return Transaction.deserialize("signature", "proof", "binding", fromHex(balancedHex));
     },
 
     submitTx: async (tx: FinalizedTransaction) => {
-      const txHex = toHex((tx as unknown as { serialize(): Uint8Array }).serialize());
+      const txHex = toHex(tx.serialize());
       await api.submitTransaction(txHex);
       // The connector's submitTransaction resolves with no payload; the
-      // transaction's own hash is what midnight-js treats as its id.
-      return toHex(
-        (tx as unknown as { transactionHash(): { serialize(): Uint8Array } }).transactionHash().serialize(),
-      );
+      // transaction's own hash (already a plain string) is what
+      // midnight-js treats as its id.
+      return tx.transactionHash();
     },
   };
 };
