@@ -26,7 +26,11 @@ export type WalletInfo = {
   shieldedAddress: string;
 };
 
-const OWNER_KEY_STORAGE = "milestone.ownerSecretKey";
+// Scoped per contract address — an unscoped key would silently reuse the
+// wrong owner secret if this browser deploys or joins more than one
+// contract in the same session.
+const ownerKeyStorageKey = (contractAddress: string) =>
+  `milestone.ownerSecretKey.${contractAddress}`;
 
 const randomSecretKey = (): Uint8Array => crypto.getRandomValues(new Uint8Array(32));
 
@@ -90,7 +94,7 @@ export const useMidnight = () => {
       const ownerSecretKey = randomSecretKey();
       const deployed = await deployContractCircuit(providers, ownerSecretKey);
       const address = deployed.deployTxData.public.contractAddress;
-      localStorage.setItem(OWNER_KEY_STORAGE, toHex(ownerSecretKey));
+      localStorage.setItem(ownerKeyStorageKey(address), toHex(ownerSecretKey));
       setOwnerSecretKeyHex(toHex(ownerSecretKey));
       setContract(deployed);
       setContractAddress(address);
@@ -108,9 +112,10 @@ export const useMidnight = () => {
       setError(null);
       setBusy("Loading contract...");
       try {
-        const stored = ownerSecretKeyOverride ?? localStorage.getItem(OWNER_KEY_STORAGE);
+        const stored = ownerSecretKeyOverride ?? localStorage.getItem(ownerKeyStorageKey(address));
         const ownerSecretKey = stored ? new Uint8Array(fromHex(stored)) : randomSecretKey();
         const found = await joinContractCircuit(providers, address, ownerSecretKey);
+        localStorage.setItem(ownerKeyStorageKey(address), toHex(ownerSecretKey));
         setOwnerSecretKeyHex(toHex(ownerSecretKey));
         setContract(found);
         setContractAddress(address);
