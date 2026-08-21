@@ -160,11 +160,11 @@ the individual amount you typed.
   CONTRACT_ADDRESS=<address> npm run status:preprod
   ```
 
-An earlier deployment also exists on **Preview** for local development/testing:
+A deployment also exists on **Preview** for local development/testing:
 
-- Contract address: [`4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd`](https://preview.midnightexplorer.com/contracts/4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd) — view live on Midnight Explorer
+- Contract address: [`6ee6f0b3b41978c87066eac3f4439668db34426a167a0efb8fd26232ca0f52b4`](https://preview.midnightexplorer.com/contracts/6ee6f0b3b41978c87066eac3f4439668db34426a167a0efb8fd26232ca0f52b4) — view live on Midnight Explorer
   ```bash
-  CONTRACT_ADDRESS=4bf6030d9e9bbf98ede5570fa18507216cb66c06c944857bcb63ec68a79555fd npm run status:preview
+  CONTRACT_ADDRESS=6ee6f0b3b41978c87066eac3f4439668db34426a167a0efb8fd26232ca0f52b4 npm run status:preview
   ```
 
 ## Live demo
