@@ -26,7 +26,13 @@ export const ContributeForm = ({
   );
 
   const submit = async () => {
-    const value = BigInt(amount || "0");
+    let value: bigint;
+    try {
+      value = BigInt(amount || "0");
+    } catch {
+      return;
+    }
+    if (value <= 0n) return;
     const before = await onContribute(value);
     if (before) {
       setDiff({ before, submittedAmount: value });
