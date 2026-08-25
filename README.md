@@ -162,9 +162,9 @@ the individual amount you typed.
 
 A deployment also exists on **Preview** for local development/testing:
 
-- Contract address: [`6ee6f0b3b41978c87066eac3f4439668db34426a167a0efb8fd26232ca0f52b4`](https://preview.midnightexplorer.com/contracts/6ee6f0b3b41978c87066eac3f4439668db34426a167a0efb8fd26232ca0f52b4) — view live on Midnight Explorer
+- Contract address: [`4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19`](https://preview.midnightexplorer.com/contracts/4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19) — view live on Midnight Explorer
   ```bash
-  CONTRACT_ADDRESS=6ee6f0b3b41978c87066eac3f4439668db34426a167a0efb8fd26232ca0f52b4 npm run status:preview
+  CONTRACT_ADDRESS=4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19 npm run status:preview
   ```
 
 ## Live demo
