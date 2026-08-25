@@ -11,6 +11,46 @@ It's a small, concrete illustration of the core Midnight pattern: keep
 sensitive inputs private by default, and only reveal exactly the aggregate
 fact the application actually needs the world to see — nothing more.
 
+## Deployed contract
+
+- Network: **Preprod** — TODO: fill in the address here after running `npm run deploy:preprod`
+- Verify independently at any time (no wallet needed, reads the indexer directly):
+  ```bash
+  CONTRACT_ADDRESS=<address> npm run status:preprod
+  ```
+
+A deployment also exists on **Preview**:
+
+- Contract address: [`4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19`](https://preview.midnightexplorer.com/contracts/4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19) — view live on Midnight Explorer
+  ```bash
+  CONTRACT_ADDRESS=4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19 npm run status:preview
+  ```
+
+## Live demo
+
+`TODO: link once deployed to Vercel/Netlify — see frontend/ for the build to deploy.`
+
+## Demo video
+
+`TODO: link a short recording of wallet connect + a successful contribute() call.`
+
+## Submission checklist
+
+- [x] Midnight.js SDK + DApp Connector API — `frontend/src/midnight/`
+- [x] Lace connect / disconnect — `frontend/src/midnight/dappConnector.ts`,
+      wired into the UI via `WalletBar`
+- [x] Circuit called from the frontend, result handled — `contribute()` in
+      `frontend/src/midnight/contract.ts`, called from `ContributeForm`
+- [x] Observable privacy behavior — see "Observable privacy behavior" below
+- [x] Local private state managed client-side — IndexedDB via
+      `levelPrivateStateProvider`, see "Frontend" section below
+- [ ] Contract deployed to Preprod with a verifiable address — see
+      "Deployed contract" above (TODO once `npm run deploy:preprod` is run)
+- [ ] Live demo link (Vercel/Netlify) — see "Live demo" above
+- [ ] Demo video (wallet connect + successful circuit call) — see "Demo
+      video" above
+- [x] Minimum 8 meaningful commits — `git log`
+
 ## Public state vs. private witness
 
 Compact splits contract data into two worlds that never mix unless you say
@@ -50,8 +90,8 @@ cli/                Node-based deployment tooling (Preview + Preprod)
   proof-server.yml       docker compose for the local proof server
 frontend/           Browser DApp — Lace wallet connect + circuit calls
   src/midnight/       DApp Connector ↔ midnight-js bridge (see below)
-  src/hooks/useMidnight.ts  connect/disconnect/deploy/join/contribute state
-  src/components/     wallet bar, contract panel, contribute form
+  src/hooks/useMidnight.ts  connect/disconnect/join/contribute state
+  src/components/     wallet bar, contract info, contribute form
 screenshots/        compile + deploy output
 ```
 
@@ -113,7 +153,9 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 `frontend/` is a Vite + React app that connects to Lace via the [DApp
 Connector API](https://docs.midnight.network/api-reference/dapp-connector)
 (`@midnight-ntwrk/dapp-connector-api`) and calls the same contract as the
-CLI, from the browser.
+CLI, from the browser. It always talks to one fixed, universally-known
+deployed contract (`VITE_CONTRACT_ADDRESS`) — there's no manual deploy/join
+UI — so connecting a wallet loads that contract's public state automatically.
 
 ```bash
 cd frontend
@@ -122,9 +164,10 @@ npm run dev            # http://localhost:5173
 
 By default it targets **Preprod** (`VITE_NETWORK=preprod`); set
 `frontend/.env.local` to `VITE_NETWORK=preview` to point it at Preview
-instead (see `.env.example`). `predev`/`prebuild` automatically copy the
-compiled circuit artifacts from `contract/src/managed/milestone` into
-`public/managed/milestone` so the browser can fetch them over HTTP.
+instead (see `.env.example`). `predev`/`prebuild` build the `contract`
+workspace and copy its compiled circuit artifacts from
+`contract/src/managed/milestone` into `public/managed/milestone` so the
+browser can fetch them over HTTP.
 
 **How it's wired** (`frontend/src/midnight/`):
 
@@ -152,29 +195,6 @@ the UI, but because the chain itself never received the number. Submit one
 that crosses a threshold and you see the *cumulative* total appear, never
 the individual amount you typed.
 
-## Deployed contract
-
-- Network: **Preprod** — TODO: fill in the address here after running `npm run deploy:preprod`
-- Verify independently at any time (no wallet needed, reads the indexer directly):
-  ```bash
-  CONTRACT_ADDRESS=<address> npm run status:preprod
-  ```
-
-A deployment also exists on **Preview** for local development/testing:
-
-- Contract address: [`4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19`](https://preview.midnightexplorer.com/contracts/4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19) — view live on Midnight Explorer
-  ```bash
-  CONTRACT_ADDRESS=4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19 npm run status:preview
-  ```
-
-## Live demo
-
-`TODO: link once deployed to Vercel/Netlify — see frontend/ for the build to deploy.`
-
-## Demo video
-
-`TODO: link a short recording of wallet connect + a successful contribute() call.`
-
 ## Screenshots
 
 **`compact compile` + test output** — compiled circuits and the generated `managed/` tree (zkir + prover/verifier keys):
@@ -184,20 +204,3 @@ A deployment also exists on **Preview** for local development/testing:
 **`npm run deploy:preview` output** — wallet funding and the resulting on-chain contract address:
 
 ![deploy to Preview output](screenshots/deploy.png)
-
-## Submission checklist
-
-- [x] Midnight.js SDK + DApp Connector API — `frontend/src/midnight/`
-- [x] Lace connect / disconnect — `frontend/src/midnight/dappConnector.ts`,
-      wired into the UI via `WalletBar`
-- [x] Circuit called from the frontend, result handled — `contribute()` in
-      `frontend/src/midnight/contract.ts`, called from `ContributeForm`
-- [x] Observable privacy behavior — see "Observable privacy behavior" above
-- [x] Local private state managed client-side — IndexedDB via
-      `levelPrivateStateProvider`, see "Frontend" section above
-- [ ] Contract deployed to Preprod with a verifiable address — see
-      "Deployed contract" above (TODO once `npm run deploy:preprod` is run)
-- [ ] Live demo link (Vercel/Netlify) — see "Live demo" above
-- [ ] Demo video (wallet connect + successful circuit call) — see "Demo
-      video" above
-- [x] Minimum 8 meaningful commits — `git log`
