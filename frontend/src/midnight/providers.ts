@@ -61,7 +61,13 @@ export const buildProviders = async (api: ConnectedAPI): Promise<MilestoneProvid
     api.getUnshieldedAddress(),
   ]);
 
-  const zkConfigProvider = new FetchZkConfigProvider<MilestoneCircuits>(zkConfigBaseUrl);
+  // FetchZkConfigProvider defaults to a `fetch` reference re-exported by
+  // cross-fetch, which strips its `window` binding and throws "Illegal
+  // invocation" in Chrome. Pass one bound via a proper method call instead.
+  const zkConfigProvider = new FetchZkConfigProvider<MilestoneCircuits>(
+    zkConfigBaseUrl,
+    (url, init) => window.fetch(url, init),
+  );
 
   // Delegate proving to the wallet itself (Lace runs the prover) instead of
   // shipping a local proof server — this is the point of the connector API.
