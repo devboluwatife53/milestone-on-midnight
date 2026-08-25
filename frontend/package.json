@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "sync-zk-assets": "node scripts/sync-zk-assets.mjs",
-    "predev": "npm run sync-zk-assets",
-    "prebuild": "npm run sync-zk-assets",
+    "build-contract-dep": "npm --prefix ../contract run build",
+    "predev": "npm run build-contract-dep && npm run sync-zk-assets",
+    "prebuild": "npm run build-contract-dep && npm run sync-zk-assets",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",

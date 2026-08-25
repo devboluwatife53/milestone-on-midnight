@@ -1,11 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ConnectedAPI } from "@midnight-ntwrk/dapp-connector-api";
 import { toHex, fromHex } from "@midnight-ntwrk/midnight-js/utils";
 import { connectWallet, disconnectWallet } from "../midnight/dappConnector";
 import { buildProviders } from "../midnight/providers";
 import {
   contribute as contributeCircuit,
-  deploy as deployContractCircuit,
   getMilestoneLedgerState,
   joinContract as joinContractCircuit,
   resetMilestones as resetMilestonesCircuit,
@@ -86,26 +85,6 @@ export const useMidnight = () => {
     [],
   );
 
-  const deploy = useCallback(async () => {
-    if (!providers) return;
-    setError(null);
-    setBusy("Deploying contract (proving + submitting a transaction via Lace)...");
-    try {
-      const ownerSecretKey = randomSecretKey();
-      const deployed = await deployContractCircuit(providers, ownerSecretKey);
-      const address = deployed.deployTxData.public.contractAddress;
-      localStorage.setItem(ownerKeyStorageKey(address), toHex(ownerSecretKey));
-      setOwnerSecretKeyHex(toHex(ownerSecretKey));
-      setContract(deployed);
-      setContractAddress(address);
-      await refreshLedgerState(address, providers);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(null);
-    }
-  }, [providers, refreshLedgerState]);
-
   const join = useCallback(
     async (address: string, ownerSecretKeyOverride?: string) => {
       if (!providers) return;
@@ -149,6 +128,14 @@ export const useMidnight = () => {
     [contract, providers, contractAddress, ledgerState, refreshLedgerState],
   );
 
+  // The app targets a single, universally-known deployed contract — no
+  // manual deploy/join UI — so load it automatically once a wallet connects.
+  useEffect(() => {
+    if (isConnected && providers && defaultContractAddress && contract === null) {
+      join(defaultContractAddress);
+    }
+  }, [isConnected, providers, contract, join]);
+
   const resetMilestones = useCallback(async () => {
     if (!contract || !providers || !contractAddress) return;
     setError(null);
@@ -177,7 +164,6 @@ export const useMidnight = () => {
       hasContract: contract !== null,
       connect,
       disconnect,
-      deploy,
       join,
       contribute,
       resetMilestones,
@@ -194,7 +180,6 @@ export const useMidnight = () => {
       contract,
       connect,
       disconnect,
-      deploy,
       join,
       contribute,
       resetMilestones,

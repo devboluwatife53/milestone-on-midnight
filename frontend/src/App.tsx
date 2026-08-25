@@ -1,6 +1,6 @@
 import { useMidnight } from "./hooks/useMidnight";
 import { WalletBar } from "./components/WalletBar";
-import { ContractPanel } from "./components/ContractPanel";
+import { ContractInfo } from "./components/ContractInfo";
 import { ContributeForm } from "./components/ContributeForm";
 import "./App.css";
 
@@ -24,13 +24,10 @@ export const App = () => {
           <p className="panel__hint">Connect Lace to deploy or interact with the contract.</p>
         ) : (
           <>
-            <ContractPanel
+            <ContractInfo
               contractAddress={m.contractAddress}
               ledgerState={m.ledgerState}
               ownerSecretKeyHex={m.ownerSecretKeyHex}
-              busy={m.busy}
-              onDeploy={m.deploy}
-              onJoin={m.join}
             />
 
             {m.hasContract && (

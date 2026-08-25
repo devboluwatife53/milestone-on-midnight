@@ -1,43 +1,20 @@
-import { useState } from "react";
 import { networkConfig } from "../midnight/config";
 import type { LedgerState } from "../hooks/useMidnight";
 
-export const ContractPanel = ({
+export const ContractInfo = ({
   contractAddress,
   ledgerState,
   ownerSecretKeyHex,
-  busy,
-  onDeploy,
-  onJoin,
 }: {
   contractAddress?: string;
   ledgerState: LedgerState | null;
   ownerSecretKeyHex: string | null;
-  busy: string | null;
-  onDeploy: () => void;
-  onJoin: (address: string) => void;
 }) => {
-  const [addressInput, setAddressInput] = useState(contractAddress ?? "");
-
   return (
     <section className="panel">
       <h2>Contract</h2>
-      <div className="panel__row">
-        <button onClick={onDeploy} disabled={!!busy}>
-          Deploy new contract
-        </button>
-        <span className="panel__or">or</span>
-        <input
-          placeholder="Existing contract address"
-          value={addressInput}
-          onChange={(e) => setAddressInput(e.target.value)}
-        />
-        <button onClick={() => onJoin(addressInput.trim())} disabled={!!busy || !addressInput.trim()}>
-          Join
-        </button>
-      </div>
 
-      {contractAddress && (
+      {contractAddress ? (
         <p className="panel__address">
           Address:{" "}
           <a
@@ -48,6 +25,8 @@ export const ContractPanel = ({
             {contractAddress}
           </a>
         </p>
+      ) : (
+        <p className="panel__hint">Loading contract...</p>
       )}
 
       {ownerSecretKeyHex && (
