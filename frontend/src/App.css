@@ -101,6 +101,16 @@
   color: #ff8080;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #8ab4ff;
+  cursor: pointer;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
 .milestone-stats {
   display: flex;
   gap: 2rem;
