@@ -1,6 +1,6 @@
 import { useMidnight } from "./hooks/useMidnight";
 import { WalletBar } from "./components/WalletBar";
-import { ContractInfo } from "./components/ContractInfo";
+import { MilestoneProgress } from "./components/MilestoneProgress";
 import { ContributeForm } from "./components/ContributeForm";
 import "./App.css";
 
@@ -21,14 +21,10 @@ export const App = () => {
         {m.error && <p className="error">{m.error}</p>}
 
         {!m.isConnected ? (
-          <p className="panel__hint">Connect Lace to deploy or interact with the contract.</p>
+          <p className="panel__hint">Connect Lace to contribute — your amount stays private.</p>
         ) : (
           <>
-            <ContractInfo
-              contractAddress={m.contractAddress}
-              ledgerState={m.ledgerState}
-              ownerSecretKeyHex={m.ownerSecretKeyHex}
-            />
+            <MilestoneProgress ledgerState={m.ledgerState} />
 
             {m.hasContract && (
               <>
