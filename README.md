@@ -90,8 +90,8 @@ cli/                Node-based deployment tooling (Preview + Preprod)
   proof-server.yml       docker compose for the local proof server
 frontend/           Browser DApp — Lace wallet connect + circuit calls
   src/midnight/       DApp Connector ↔ midnight-js bridge (see below)
-  src/hooks/useMidnight.ts  connect/disconnect/create/join/contribute state
-  src/components/     wallet bar, milestone switcher, progress, contribute form
+  src/hooks/useMidnight.ts  connect/disconnect/join/contribute state
+  src/components/     wallet bar, contract info, contribute form
 screenshots/        compile + deploy output
 ```
 
@@ -153,10 +153,9 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 `frontend/` is a Vite + React app that connects to Lace via the [DApp
 Connector API](https://docs.midnight.network/api-reference/dapp-connector)
 (`@midnight-ntwrk/dapp-connector-api`) and calls the same contract as the
-CLI, from the browser. Connecting a wallet loads a well-known demo contract
-by default (`VITE_CONTRACT_ADDRESS`), but each user can also **create their
-own milestone** — deploying a fresh contract instance with its own owner,
-counter, and address — or load any other milestone by pasting its address.
+CLI, from the browser. It always talks to one fixed, universally-known
+deployed contract (`VITE_CONTRACT_ADDRESS`) — there's no manual deploy/join
+UI — so connecting a wallet loads that contract's public state automatically.
 
 ```bash
 cd frontend

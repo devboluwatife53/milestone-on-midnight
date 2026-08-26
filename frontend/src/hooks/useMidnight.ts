@@ -5,7 +5,6 @@ import { connectWallet, disconnectWallet } from "../midnight/dappConnector";
 import { buildProviders } from "../midnight/providers";
 import {
   contribute as contributeCircuit,
-  deploy as deployContractCircuit,
   getMilestoneLedgerState,
   joinContract as joinContractCircuit,
   resetMilestones as resetMilestonesCircuit,
@@ -109,26 +108,6 @@ export const useMidnight = () => {
     [providers, refreshLedgerState],
   );
 
-  const createMilestone = useCallback(async () => {
-    if (!providers) return;
-    setError(null);
-    setBusy("Deploying your milestone contract (proving + submitting via Lace)...");
-    try {
-      const ownerSecretKey = randomSecretKey();
-      const deployed = await deployContractCircuit(providers, ownerSecretKey);
-      const address = deployed.deployTxData.public.contractAddress;
-      localStorage.setItem(ownerKeyStorageKey(address), toHex(ownerSecretKey));
-      setOwnerSecretKeyHex(toHex(ownerSecretKey));
-      setContract(deployed);
-      setContractAddress(address);
-      await refreshLedgerState(address, providers);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(null);
-    }
-  }, [providers, refreshLedgerState]);
-
   const contribute = useCallback(
     async (amount: bigint) => {
       if (!contract || !providers || !contractAddress) return;
@@ -149,9 +128,8 @@ export const useMidnight = () => {
     [contract, providers, contractAddress, ledgerState, refreshLedgerState],
   );
 
-  // Load the well-known demo contract by default so there's something to
-  // look at right after connecting; users can still create their own or
-  // load a different address via MilestoneSwitcher.
+  // The app targets a single, universally-known deployed contract — no
+  // manual deploy/join UI — so load it automatically once a wallet connects.
   useEffect(() => {
     if (isConnected && providers && defaultContractAddress && contract === null) {
       join(defaultContractAddress);
@@ -187,7 +165,6 @@ export const useMidnight = () => {
       connect,
       disconnect,
       join,
-      createMilestone,
       contribute,
       resetMilestones,
     }),
@@ -204,7 +181,6 @@ export const useMidnight = () => {
       connect,
       disconnect,
       join,
-      createMilestone,
       contribute,
       resetMilestones,
     ],

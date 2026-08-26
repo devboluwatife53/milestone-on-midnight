@@ -1,6 +1,5 @@
 import { useMidnight } from "./hooks/useMidnight";
 import { WalletBar } from "./components/WalletBar";
-import { MilestoneSwitcher } from "./components/MilestoneSwitcher";
 import { MilestoneProgress } from "./components/MilestoneProgress";
 import { ContributeForm } from "./components/ContributeForm";
 import "./App.css";
@@ -25,14 +24,6 @@ export const App = () => {
           <p className="panel__hint">Connect Lace to contribute — your amount stays private.</p>
         ) : (
           <>
-            <MilestoneSwitcher
-              contractAddress={m.contractAddress}
-              ownerSecretKeyHex={m.ownerSecretKeyHex}
-              busy={m.busy}
-              onCreate={m.createMilestone}
-              onLoad={m.join}
-            />
-
             <MilestoneProgress ledgerState={m.ledgerState} />
 
             {m.hasContract && (
