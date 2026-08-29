@@ -5,87 +5,85 @@ import { randomBytes } from "./utils.js";
 
 setNetworkId("undeployed");
 
-describe("Milestone smart contract", () => {
-  it("initializes public state with zero milestones and no private data leaked", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
+describe("Milestone forum contract", () => {
+  it("initializes with an empty feed and no milestones celebrated", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
     const ledger = simulator.getLedger();
 
-    expect(ledger.milestonesReached).toEqual(0n);
-    expect(ledger.lastDisclosedTotal).toEqual(0n);
-    expect(ledger.owner).toEqual(MilestoneSimulator.publicKey(owner));
+    expect(ledger.totalCelebrated).toEqual(0n);
+    expect(simulator.getFeed()).toEqual([]);
   });
 
-  it("keeps small contributions private (no ledger change) below the milestone threshold", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
+  it("keeps small progress private (no ledger change) below the milestone threshold", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
 
-    simulator.contribute(40n);
-    let ledger = simulator.getLedger();
-    expect(ledger.milestonesReached).toEqual(0n);
-    expect(ledger.lastDisclosedTotal).toEqual(0n);
+    simulator.celebrate(40n, "saved some cash");
+    expect(simulator.getLedger().totalCelebrated).toEqual(0n);
+    expect(simulator.getFeed()).toEqual([]);
 
-    simulator.contribute(30n);
-    ledger = simulator.getLedger();
-    // hidden total is now 70, still under the 100 threshold
-    expect(ledger.milestonesReached).toEqual(0n);
-    expect(ledger.lastDisclosedTotal).toEqual(0n);
+    simulator.celebrate(30n, "saved a bit more");
+    // hidden progress is now 70, still under the 100 threshold
+    expect(simulator.getLedger().totalCelebrated).toEqual(0n);
+    expect(simulator.getFeed()).toEqual([]);
 
     // private state accumulated even though nothing was disclosed
-    expect(simulator.getPrivateState().hiddenTotal).toEqual(70n);
+    expect(simulator.getPrivateState().hiddenProgress).toEqual(70n);
   });
 
-  it("discloses the cumulative total only once a milestone is crossed", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
+  it("posts to the public feed only once a milestone is crossed", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
 
-    simulator.contribute(40n);
-    simulator.contribute(70n); // hidden total = 110, crosses the 100 threshold
-    const ledger = simulator.getLedger();
+    simulator.celebrate(40n, "got closer");
+    simulator.celebrate(70n, "got a new car"); // hidden progress = 110, crosses the 100 threshold
 
-    expect(ledger.milestonesReached).toEqual(1n);
-    expect(ledger.lastDisclosedTotal).toEqual(110n);
+    expect(simulator.getLedger().totalCelebrated).toEqual(1n);
+    const feed = simulator.getFeed();
+    expect(feed).toHaveLength(1);
+    expect(feed[0].tier).toEqual(1n);
+    expect(feed[0].label).toEqual("got a new car");
+    expect(feed[0].author).toEqual(MilestoneSimulator.publicKey(key));
   });
 
-  it("can cross multiple milestones in a single contribution", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
+  it("never discloses the private label or amount of a call that doesn't cross a milestone", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
 
-    simulator.contribute(250n);
-    const ledger = simulator.getLedger();
-
-    expect(ledger.milestonesReached).toEqual(1n);
-    expect(ledger.lastDisclosedTotal).toEqual(250n);
+    simulator.celebrate(40n, "this should never appear on chain");
+    expect(simulator.getFeed()).toEqual([]);
   });
 
-  it("rejects a non-positive contribution", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
-    expect(() => simulator.contribute(0n)).toThrow(
-      "Contribution must be positive",
-    );
+  it("newest posts appear first in the feed", () => {
+    const alice = randomBytes(32);
+    const simulator = new MilestoneSimulator(alice);
+    simulator.celebrate(150n, "first milestone");
+
+    const bob = randomBytes(32);
+    simulator.switchUser(bob);
+    simulator.celebrate(150n, "second milestone");
+
+    const feed = simulator.getFeed();
+    expect(feed).toHaveLength(2);
+    expect(feed[0].label).toEqual("second milestone");
+    expect(feed[1].label).toEqual("first milestone");
   });
 
-  it("lets the owner reset the public milestone counter", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
-    simulator.contribute(150n);
-    expect(simulator.getLedger().milestonesReached).toEqual(1n);
+  it("can cross multiple milestone boundaries in a single call but only posts once", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
 
-    simulator.resetMilestones();
-    const ledger = simulator.getLedger();
-    expect(ledger.milestonesReached).toEqual(0n);
-    expect(ledger.lastDisclosedTotal).toEqual(0n);
+    simulator.celebrate(250n, "huge leap forward");
+    expect(simulator.getLedger().totalCelebrated).toEqual(1n);
+    expect(simulator.getFeed()).toHaveLength(1);
   });
 
-  it("does not let a non-owner reset the milestone counter", () => {
-    const owner = randomBytes(32);
-    const simulator = new MilestoneSimulator(owner);
-    simulator.contribute(150n);
-
-    simulator.switchUser(randomBytes(32), 150n);
-    expect(() => simulator.resetMilestones()).toThrow(
-      "Only the owner can reset milestones",
+  it("rejects a non-positive amount", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
+    expect(() => simulator.celebrate(0n, "nope")).toThrow(
+      "Progress must be positive",
     );
   });
 });

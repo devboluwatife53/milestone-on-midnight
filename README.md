@@ -1,15 +1,17 @@
-# Milestone — a private-contribution counter on Midnight
+# Milestone — a public forum for celebrating private milestones on Midnight
 
 ## Product idea
 
-Milestone is a minimal privacy-preserving fundraising/progress tracker built
-with Compact. Contributors submit amounts privately — no one, not even the
-chain, ever sees an individual contribution — but the *moment* the running
-total crosses a milestone (every 100 units), that cumulative total is
-deliberately disclosed on-chain and the public milestone counter ticks up.
-It's a small, concrete illustration of the core Midnight pattern: keep
-sensitive inputs private by default, and only reveal exactly the aggregate
-fact the application actually needs the world to see — nothing more.
+Milestone is a public celebration wall built with Compact. Anyone can
+connect a wallet and log private progress toward a personal goal — money
+saved, distance run, whatever they're privately tracking. The amount itself
+is never written to the ledger. The moment their private running total
+crosses the next milestone (every 100 units), a post is disclosed to a
+shared public feed: the achievement they chose to share ("got a new car")
+and the tier they reached — never the number behind it. It's a small,
+concrete illustration of the core Midnight pattern: keep sensitive inputs
+private by default, and only reveal exactly the fact the application
+actually needs the world to see — nothing more.
 
 ## Deployed contract
 
@@ -32,15 +34,15 @@ A deployment also exists on **Preview**:
 
 ## Demo video
 
-`TODO: link a short recording of wallet connect + a successful contribute() call.`
+`TODO: link a short recording of wallet connect + a successful celebrate() call landing on the wall.`
 
 ## Submission checklist
 
 - [x] Midnight.js SDK + DApp Connector API — `frontend/src/midnight/`
 - [x] Lace connect / disconnect — `frontend/src/midnight/dappConnector.ts`,
       wired into the UI via `WalletBar`
-- [x] Circuit called from the frontend, result handled — `contribute()` in
-      `frontend/src/midnight/contract.ts`, called from `ContributeForm`
+- [x] Circuit called from the frontend, result handled — `celebrate()` in
+      `frontend/src/midnight/contract.ts`, called from `CelebrateForm`
 - [x] Observable privacy behavior — see "Observable privacy behavior" below
 - [x] Local private state managed client-side — IndexedDB via
       `levelPrivateStateProvider`, see "Frontend" section below
@@ -56,24 +58,28 @@ A deployment also exists on **Preview**:
 Compact splits contract data into two worlds that never mix unless you say
 so explicitly:
 
-- **Public ledger state** (`contract/src/milestone.compact`): `owner`,
-  `milestonesReached`, and `lastDisclosedTotal` are declared with `export
-  ledger`. These are readable by anyone querying the chain — that's the
-  entire point of putting them there.
-- **Private witness state**: the caller's `secretKey` and their running
-  `hiddenTotal` never appear in the ledger. They live only in the caller's
-  local private state (see `contract/src/witnesses.ts`), and are supplied to
-  circuits via `witness` declarations (`localSecretKey`, `addToHiddenTotal`).
-  The compiler enforces this — any attempt to write a witness-derived value
-  to the ledger without wrapping it in `disclose()` is a **compile error**.
+- **Public ledger state** (`contract/src/milestone.compact`): `feed` (the
+  public wall, a `List<MilestonePost>`) and `totalCelebrated` are declared
+  with `export ledger`. These are readable by anyone querying the chain —
+  that's the entire point of putting them there.
+- **Private witness state**: the caller's `secretKey`, their running
+  `hiddenProgress`, and how many personal tiers they've already crossed
+  never appear in the ledger. They live only in the caller's local private
+  state (see `contract/src/witnesses.ts`), and are supplied to circuits via
+  `witness` declarations (`localSecretKey`, `addToHiddenProgress`,
+  `currentTier`, `advanceTier`). The compiler enforces this — any attempt
+  to write a witness-derived value to the ledger without wrapping it in
+  `disclose()` is a **compile error**.
 
-The `contribute` circuit shows the boundary in action: it computes
-`newTotal` from a private witness, but only calls `disclose(newTotal)` (and
-increments the public counter) once that total crosses the next milestone
-threshold. Every contribution below the threshold leaves zero trace on
-chain — not the amount, not even the fact that a contribution happened.
-`resetMilestones` shows the same pattern for authorization: the owner proves
-they know the secret key behind `owner` without ever revealing that key.
+The `celebrate` circuit shows the boundary in action: it computes a new
+private total from a witness, but only pushes a post to the public `feed`
+(and increments `totalCelebrated`) once that total crosses the caller's
+next personal milestone threshold. Every call below the threshold leaves
+zero trace on chain — not the amount, not the achievement text, not even
+the fact that a call happened at all (beyond the transaction itself being
+submitted). The author on a disclosed post is a hash derived from the
+caller's own secret key via `publicKey()` — pseudonymous, provable, never
+tied to a real identity.
 
 ## Repo layout
 
@@ -84,14 +90,14 @@ contract/          Compact contract, generated managed/ output, tests
   src/managed/milestone/ generated circuits, zkir, and prover/verifier keys
   src/test/               vitest suite against a local simulator
 cli/                Node-based deployment tooling (Preview + Preprod)
-  src/deploy-{preview,preprod}.ts   build/fund a wallet, deploy, print address
-  src/contribute-{preview,preprod}.ts  call contribute() from the CLI
-  src/join-{preview,preprod}.ts     read back public state, no wallet needed
+  src/deploy-{preview,preprod}.ts     build/fund a wallet, deploy, print address
+  src/celebrate-{preview,preprod}.ts  call celebrate() from the CLI
+  src/join-{preview,preprod}.ts       read back the public feed, no wallet needed
   proof-server.yml       docker compose for the local proof server
 frontend/           Browser DApp — Lace wallet connect + circuit calls
   src/midnight/       DApp Connector ↔ midnight-js bridge (see below)
-  src/hooks/useMidnight.ts  connect/disconnect/join/contribute state
-  src/components/     wallet bar, contract info, contribute form
+  src/hooks/useMidnight.ts  connect/disconnect/join/celebrate state
+  src/components/     wallet bar, milestone feed (the wall), celebrate form
 screenshots/        compile + deploy output
 ```
 
@@ -132,18 +138,23 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
    ```bash
    npm run deploy:preview   # or: npm run deploy:preprod
    ```
-   With no `WALLET_SEED` set, this generates a fresh wallet and contract
-   owner key, prints the wallet's unshielded address, and waits for you to
-   fund it from the network's faucet
+   With no `WALLET_SEED` set, this generates a fresh wallet and a fresh
+   identity key, prints the wallet's unshielded address, and waits for you
+   to fund it from the network's faucet
    ([Preview](https://faucet.preview.midnight.network/) /
    [Preprod](https://faucet.preprod.midnight.network/)) before deploying.
-   **Save the printed seed and owner secret key** — the owner key is
-   required to later call `resetMilestones`. To reuse an existing wallet on
-   a later run:
+   **Save the printed seed and identity secret key** — reuse the identity
+   key to keep posting under the same pseudonymous author on the public
+   feed. To reuse an existing wallet on a later run:
    ```bash
-   WALLET_SEED=<hex seed> OWNER_SECRET_KEY=<hex key> npm run deploy:preprod
+   WALLET_SEED=<hex seed> IDENTITY_SECRET_KEY=<hex key> npm run deploy:preprod
    ```
-8. **Check a deployed contract's public state** at any time:
+8. **Log a milestone from the CLI** against an already-deployed contract:
+   ```bash
+   CONTRACT_ADDRESS=<address> WALLET_SEED=<hex> IDENTITY_SECRET_KEY=<hex> \
+     AMOUNT=150 LABEL="got a new car" npm run celebrate:preprod
+   ```
+9. **Check a deployed contract's public feed** at any time:
    ```bash
    CONTRACT_ADDRESS=<address> npm run status:preview
    ```
@@ -155,7 +166,7 @@ Connector API](https://docs.midnight.network/api-reference/dapp-connector)
 (`@midnight-ntwrk/dapp-connector-api`) and calls the same contract as the
 CLI, from the browser. It always talks to one fixed, universally-known
 deployed contract (`VITE_CONTRACT_ADDRESS`) — there's no manual deploy/join
-UI — so connecting a wallet loads that contract's public state automatically.
+UI — so connecting a wallet loads that contract's public feed automatically.
 
 ```bash
 cd frontend
@@ -184,16 +195,16 @@ browser can fetch them over HTTP.
   browser), fetches ZK artifacts over HTTP (`FetchZkConfigProvider`), and
   manages **local private state** in IndexedDB (`levelPrivateStateProvider`,
   scoped per connected wallet account).
-- `contract.ts` — deploy / join / `contribute` / `resetMilestones`, mirroring
-  `cli/src/api.ts` but running entirely client-side.
+- `contract.ts` — deploy / join / `celebrate`, mirroring `cli/src/api.ts`
+  but running entirely client-side.
 
-**Observable privacy behavior**: the contribute form calls `contribute()`
-for real every time — a proven, submitted transaction — but diffs
-`lastDisclosedTotal` before and after. Submit an amount that doesn't cross
-a milestone and the disclosed fields are provably unchanged: not hidden by
-the UI, but because the chain itself never received the number. Submit one
-that crosses a threshold and you see the *cumulative* total appear, never
-the individual amount you typed.
+**Observable privacy behavior**: the celebrate form calls `celebrate()` for
+real every time — a proven, submitted transaction — but diffs
+`totalCelebrated` before and after. Submit progress that doesn't cross a
+milestone and the feed is provably unchanged: not hidden by the UI, but
+because the chain itself never received the number or the label. Submit
+progress that crosses a threshold and your achievement appears at the top
+of the wall — but never the private amount you typed to get there.
 
 ## Screenshots
 

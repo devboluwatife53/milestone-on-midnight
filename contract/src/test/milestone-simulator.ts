@@ -8,6 +8,7 @@ import {
 import {
   Contract,
   type Ledger,
+  type MilestonePost,
   ledger,
   pureCircuits,
 } from "../managed/milestone/contract/index.js";
@@ -25,19 +26,17 @@ export class MilestoneSimulator {
   readonly contract: Contract<MilestonePrivateState>;
   circuitContext: CircuitContext<MilestonePrivateState>;
 
-  constructor(ownerSecretKey: Uint8Array) {
+  constructor(secretKey: Uint8Array) {
     this.contract = new Contract<MilestonePrivateState>(witnesses);
-    const ownerPublicKey = pureCircuits.publicKey(ownerSecretKey);
     const {
       currentPrivateState,
       currentContractState,
       currentZswapLocalState,
     } = this.contract.initialState(
       createConstructorContext(
-        createMilestonePrivateState(ownerSecretKey),
+        createMilestonePrivateState(secretKey),
         "0".repeat(64),
       ),
-      ownerPublicKey,
     );
     this.circuitContext = {
       currentPrivateState,
@@ -50,10 +49,11 @@ export class MilestoneSimulator {
     };
   }
 
-  public switchUser(secretKey: Uint8Array, hiddenTotal = 0n) {
+  public switchUser(secretKey: Uint8Array, hiddenProgress = 0n, tierReached = 0n) {
     this.circuitContext.currentPrivateState = createMilestonePrivateState(
       secretKey,
-      hiddenTotal,
+      hiddenProgress,
+      tierReached,
     );
   }
 
@@ -61,21 +61,19 @@ export class MilestoneSimulator {
     return ledger(this.circuitContext.currentQueryContext.state);
   }
 
+  public getFeed(): MilestonePost[] {
+    return [...this.getLedger().feed];
+  }
+
   public getPrivateState(): MilestonePrivateState {
     return this.circuitContext.currentPrivateState;
   }
 
-  public contribute(amount: bigint): Ledger {
-    this.circuitContext = this.contract.impureCircuits.contribute(
+  public celebrate(amount: bigint, label: string): Ledger {
+    this.circuitContext = this.contract.impureCircuits.celebrate(
       this.circuitContext,
       amount,
-    ).context;
-    return ledger(this.circuitContext.currentQueryContext.state);
-  }
-
-  public resetMilestones(): Ledger {
-    this.circuitContext = this.contract.impureCircuits.resetMilestones(
-      this.circuitContext,
+      label,
     ).context;
     return ledger(this.circuitContext.currentQueryContext.state);
   }

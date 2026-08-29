@@ -32,6 +32,12 @@ export type DeployedMilestoneContract =
   | DeployedContract<MilestoneContract>
   | FoundContract<MilestoneContract>;
 
+export type MilestonePost = {
+  author: string;
+  tier: bigint;
+  label: string;
+};
+
 const milestoneCompiledContract = CompiledContract.make(
   "milestone",
   Milestone.Contract<MilestonePrivateState>,
@@ -42,7 +48,7 @@ const milestoneCompiledContract = CompiledContract.make(
   CompiledContract.withCompiledFileAssets(zkConfigBaseUrl),
 );
 
-/** Read the public milestone counter + last disclosed total directly from the chain. */
+/** Read the public celebration feed + total count directly from the chain. */
 export const getMilestoneLedgerState = async (
   providers: MilestoneProviders,
   contractAddress: ContractAddress,
@@ -52,54 +58,51 @@ export const getMilestoneLedgerState = async (
   if (state == null) return null;
   const l = Milestone.ledger(state.data);
   return {
-    owner: toHex(l.owner),
-    milestonesReached: l.milestonesReached,
-    lastDisclosedTotal: l.lastDisclosedTotal,
+    totalCelebrated: l.totalCelebrated,
+    feed: [...l.feed].map(
+      (post): MilestonePost => ({
+        author: toHex(post.author),
+        tier: post.tier,
+        label: post.label,
+      }),
+    ),
   };
 };
 
 /**
- * Deploys a fresh Milestone contract. The connecting wallet's own key is
- * used as the private "owner secret" — nobody but this browser session
- * (via its local private state) ever learns it in plaintext.
+ * Deploys a fresh Milestone forum contract. The connecting wallet's own key
+ * is used as the private "identity secret" — nobody but this browser
+ * session (via its local private state) ever learns it in plaintext.
  */
 export const deploy = async (
   providers: MilestoneProviders,
-  ownerSecretKey: Uint8Array,
+  identitySecretKey: Uint8Array,
 ): Promise<DeployedMilestoneContract> => {
-  const ownerPublicKey = Milestone.pureCircuits.publicKey(ownerSecretKey);
-  const privateState: MilestonePrivateState = createMilestonePrivateState(ownerSecretKey);
+  const privateState: MilestonePrivateState = createMilestonePrivateState(identitySecretKey);
   return deployContract(providers, {
     compiledContract: milestoneCompiledContract,
     privateStateId: MilestonePrivateStateId,
     initialPrivateState: privateState,
-    args: [ownerPublicKey],
   });
 };
 
 export const joinContract = async (
   providers: MilestoneProviders,
   contractAddress: string,
-  ownerSecretKey: Uint8Array,
+  identitySecretKey: Uint8Array,
 ): Promise<DeployedMilestoneContract> =>
   findDeployedContract(providers, {
     contractAddress,
     compiledContract: milestoneCompiledContract,
     privateStateId: MilestonePrivateStateId,
-    initialPrivateState: createMilestonePrivateState(ownerSecretKey),
+    initialPrivateState: createMilestonePrivateState(identitySecretKey),
   });
 
-export const contribute = async (
+export const celebrate = async (
   contract: DeployedMilestoneContract,
   amount: bigint,
+  label: string,
 ): Promise<FinalizedTxData> => {
-  const finalizedTxData = await contract.callTx.contribute(amount);
-  return finalizedTxData.public;
-};
-
-export const resetMilestones = async (
-  contract: DeployedMilestoneContract,
-): Promise<FinalizedTxData> => {
-  const finalizedTxData = await contract.callTx.resetMilestones();
+  const finalizedTxData = await contract.callTx.celebrate(amount, label);
   return finalizedTxData.public;
 };

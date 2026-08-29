@@ -4,7 +4,7 @@
   "runtime-version": "0.16.0",
   "circuits": [
     {
-      "name": "contribute",
+      "name": "celebrate",
       "pure": false,
       "proof": true,
       "arguments": [
@@ -14,19 +14,14 @@
             "type-name": "Uint",
             "maxval": 18446744073709551615
           }
+        },
+        {
+          "name": "label",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
         }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "resetMilestones",
-      "pure": false,
-      "proof": true,
-      "arguments": [
       ],
       "result-type": {
         "type-name": "Tuple",
@@ -64,7 +59,7 @@
       }
     },
     {
-      "name": "addToHiddenTotal",
+      "name": "addToHiddenProgress",
       "arguments": [
         {
           "name": "amount",
@@ -78,36 +73,68 @@
         "type-name": "Uint",
         "maxval": 18446744073709551615
       }
+    },
+    {
+      "name": "currentTier",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "advanceTier",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
     }
   ],
   "contracts": [
   ],
   "ledger": [
     {
-      "name": "owner",
+      "name": "feed",
       "index": 0,
       "exported": true,
-      "storage": "Cell",
+      "storage": "List",
       "type": {
-        "type-name": "Bytes",
-        "length": 32
+        "type-name": "Struct",
+        "name": "MilestonePost",
+        "elements": [
+          {
+            "name": "author",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "tier",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "label",
+            "type": {
+              "type-name": "Opaque",
+              "tsType": "string"
+            }
+          }
+        ]
       }
     },
     {
-      "name": "milestonesReached",
+      "name": "totalCelebrated",
       "index": 1,
       "exported": true,
       "storage": "Counter"
-    },
-    {
-      "name": "lastDisclosedTotal",
-      "index": 2,
-      "exported": true,
-      "storage": "Cell",
-      "type": {
-        "type-name": "Uint",
-        "maxval": 18446744073709551615
-      }
     }
   ]
 }

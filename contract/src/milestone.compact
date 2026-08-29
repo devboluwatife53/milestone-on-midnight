@@ -5,50 +5,54 @@ import CompactStandardLibrary;
 // ======================================================================
 // Public ledger state — readable by anyone on chain.
 // ======================================================================
-export ledger owner: Bytes<32>;
-export ledger milestonesReached: Counter;
-export ledger lastDisclosedTotal: Uint<64>;
-
-constructor(ownerPublicKey: Bytes<32>) {
-  owner = disclose(ownerPublicKey);
-  lastDisclosedTotal = 0;
+export struct MilestonePost {
+  author: Bytes<32>;
+  tier: Uint<64>;
+  label: Opaque<"string">;
 }
+
+// The public wall: every celebration post ever disclosed, newest first.
+export ledger feed: List<MilestonePost>;
+export ledger totalCelebrated: Counter;
+
+constructor() {}
 
 // ======================================================================
 // Witnesses — private, off-chain state never written to the ledger.
 // ======================================================================
 witness localSecretKey(): Bytes<32>;
-witness addToHiddenTotal(amount: Uint<64>): Uint<64>;
+witness addToHiddenProgress(amount: Uint<64>): Uint<64>;
+witness currentTier(): Uint<64>;
+witness advanceTier(): [];
 
 // ======================================================================
 // Circuits
 // ======================================================================
 
-// Anyone can contribute a private amount. The amount itself is never
-// written to the ledger. Only when the cumulative hidden total crosses
-// the next milestone boundary do we deliberately disclose() that
-// cumulative value and bump the public milestone counter.
-export circuit contribute(amount: Uint<64>): [] {
-  assert(amount > 0, "Contribution must be positive");
+// Anyone can log private progress toward a personal goal — money saved,
+// distance run, whatever the caller is privately tracking. The amount
+// never touches the ledger. Only when the caller's cumulative hidden
+// progress crosses their next personal milestone tier (every 100 units)
+// do we disclose a public celebration post to the shared feed: the tier
+// reached and the label the caller chose to share ("got a new car") —
+// never the private amount behind it.
+export circuit celebrate(amount: Uint<64>, label: Opaque<"string">): [] {
+  assert(amount > 0, "Progress must be positive");
   const milestoneStep: Uint<64> = 100;
-  const newTotal = addToHiddenTotal(amount);
-  const nextThreshold = ((milestonesReached as Field as Uint<64>) + 1) * milestoneStep;
+  const newTotal = addToHiddenProgress(amount);
+  const tier = currentTier();
+  const nextThreshold = (tier + 1) * milestoneStep;
   const crossed = disclose(newTotal >= nextThreshold);
   if (crossed) {
-    lastDisclosedTotal = disclose(newTotal);
-    milestonesReached.increment(1);
+    advanceTier();
+    const author = publicKey(localSecretKey());
+    feed.pushFront(MilestonePost {
+      author: disclose(author),
+      tier: disclose((tier + 1) as Uint<64>),
+      label: disclose(label),
+    });
+    totalCelebrated.increment(1);
   }
-}
-
-// Only the owner, proving knowledge of the secret key that hashes to
-// `owner`, can reset the public milestone counter.
-export circuit resetMilestones(): [] {
-  assert(
-    owner == publicKey(localSecretKey()),
-    "Only the owner can reset milestones"
-  );
-  milestonesReached.resetToDefault();
-  lastDisclosedTotal = 0;
 }
 
 export circuit publicKey(sk: Bytes<32>): Bytes<32> {

@@ -4,20 +4,23 @@
  * public ledger unless a circuit explicitly calls disclose().
  */
 
-import { Ledger } from "./managed/milestone/contract/index.js";
 import { WitnessContext } from "@midnight-ntwrk/compact-runtime";
+import { Ledger } from "./managed/milestone/contract/index.js";
 
 export type MilestonePrivateState = {
   readonly secretKey: Uint8Array;
-  readonly hiddenTotal: bigint;
+  readonly hiddenProgress: bigint;
+  readonly tierReached: bigint;
 };
 
 export const createMilestonePrivateState = (
   secretKey: Uint8Array,
-  hiddenTotal: bigint = 0n,
+  hiddenProgress: bigint = 0n,
+  tierReached: bigint = 0n,
 ): MilestonePrivateState => ({
   secretKey,
-  hiddenTotal,
+  hiddenProgress,
+  tierReached,
 });
 
 export const witnesses = {
@@ -28,11 +31,28 @@ export const witnesses = {
     Uint8Array,
   ] => [privateState, privateState.secretKey],
 
-  addToHiddenTotal: (
+  addToHiddenProgress: (
     { privateState }: WitnessContext<Ledger, MilestonePrivateState>,
     amount: bigint,
   ): [MilestonePrivateState, bigint] => {
-    const newTotal = privateState.hiddenTotal + amount;
-    return [{ ...privateState, hiddenTotal: newTotal }, newTotal];
+    const newTotal = privateState.hiddenProgress + amount;
+    return [{ ...privateState, hiddenProgress: newTotal }, newTotal];
   },
+
+  currentTier: ({
+    privateState,
+  }: WitnessContext<Ledger, MilestonePrivateState>): [
+    MilestonePrivateState,
+    bigint,
+  ] => [privateState, privateState.tierReached],
+
+  advanceTier: ({
+    privateState,
+  }: WitnessContext<Ledger, MilestonePrivateState>): [
+    MilestonePrivateState,
+    [],
+  ] => [
+    { ...privateState, tierReached: privateState.tierReached + 1n },
+    [],
+  ],
 };

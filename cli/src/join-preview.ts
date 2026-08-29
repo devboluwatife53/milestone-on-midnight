@@ -1,5 +1,5 @@
 /*
- * Reads the public ledger state of an already-deployed Milestone contract
+ * Reads the public feed of an already-deployed Milestone forum contract
  * on Preview, without needing a wallet or private state.
  *
  * Usage:
@@ -22,11 +22,22 @@ if (contractState == null) {
   console.log(`No contract found at ${contractAddress} on Preview.`);
 } else {
   const l = Milestone.ledger(contractState.data);
+  const posts = [...l.feed];
+  const feedText = posts.length
+    ? posts
+        .map(
+          (post) =>
+            `  [tier ${post.tier}] ${Buffer.from(post.author).toString("hex").slice(0, 12)}… — ${post.label}`,
+        )
+        .join("\n")
+    : "  (no milestones celebrated yet)";
+
   console.log(`
-Contract:            ${contractAddress}
-owner (public key):  ${Buffer.from(l.owner).toString("hex")}
-milestonesReached:   ${l.milestonesReached}
-lastDisclosedTotal:  ${l.lastDisclosedTotal}
+Contract:           ${contractAddress}
+totalCelebrated:    ${l.totalCelebrated}
+
+Public feed (newest first):
+${feedText}
 `);
 }
 

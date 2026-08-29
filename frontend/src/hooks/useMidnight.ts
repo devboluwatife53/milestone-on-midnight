@@ -4,19 +4,18 @@ import { toHex, fromHex } from "@midnight-ntwrk/midnight-js/utils";
 import { connectWallet, disconnectWallet } from "../midnight/dappConnector";
 import { buildProviders } from "../midnight/providers";
 import {
-  contribute as contributeCircuit,
+  celebrate as celebrateCircuit,
   getMilestoneLedgerState,
   joinContract as joinContractCircuit,
-  resetMilestones as resetMilestonesCircuit,
   type DeployedMilestoneContract,
   type MilestoneProviders,
+  type MilestonePost,
 } from "../midnight/contract";
 import { defaultContractAddress } from "../midnight/config";
 
 export type LedgerState = {
-  owner: string;
-  milestonesReached: bigint;
-  lastDisclosedTotal: bigint;
+  totalCelebrated: bigint;
+  feed: MilestonePost[];
 };
 
 export type WalletInfo = {
@@ -26,10 +25,10 @@ export type WalletInfo = {
 };
 
 // Scoped per contract address — an unscoped key would silently reuse the
-// wrong owner secret if this browser deploys or joins more than one
+// wrong identity secret if this browser deploys or joins more than one
 // contract in the same session.
-const ownerKeyStorageKey = (contractAddress: string) =>
-  `milestone.ownerSecretKey.${contractAddress}`;
+const identityKeyStorageKey = (contractAddress: string) =>
+  `milestone.identitySecretKey.${contractAddress}`;
 
 const randomSecretKey = (): Uint8Array => crypto.getRandomValues(new Uint8Array(32));
 
@@ -42,7 +41,7 @@ export const useMidnight = () => {
     defaultContractAddress,
   );
   const [ledgerState, setLedgerState] = useState<LedgerState | null>(null);
-  const [ownerSecretKeyHex, setOwnerSecretKeyHex] = useState<string | null>(null);
+  const [identitySecretKeyHex, setIdentitySecretKeyHex] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastTx, setLastTx] = useState<{ txId: string; blockHeight?: number } | null>(null);
@@ -86,16 +85,17 @@ export const useMidnight = () => {
   );
 
   const join = useCallback(
-    async (address: string, ownerSecretKeyOverride?: string) => {
+    async (address: string, identitySecretKeyOverride?: string) => {
       if (!providers) return;
       setError(null);
       setBusy("Loading contract...");
       try {
-        const stored = ownerSecretKeyOverride ?? localStorage.getItem(ownerKeyStorageKey(address));
-        const ownerSecretKey = stored ? new Uint8Array(fromHex(stored)) : randomSecretKey();
-        const found = await joinContractCircuit(providers, address, ownerSecretKey);
-        localStorage.setItem(ownerKeyStorageKey(address), toHex(ownerSecretKey));
-        setOwnerSecretKeyHex(toHex(ownerSecretKey));
+        const stored =
+          identitySecretKeyOverride ?? localStorage.getItem(identityKeyStorageKey(address));
+        const identitySecretKey = stored ? new Uint8Array(fromHex(stored)) : randomSecretKey();
+        const found = await joinContractCircuit(providers, address, identitySecretKey);
+        localStorage.setItem(identityKeyStorageKey(address), toHex(identitySecretKey));
+        setIdentitySecretKeyHex(toHex(identitySecretKey));
         setContract(found);
         setContractAddress(address);
         await refreshLedgerState(address, providers);
@@ -108,14 +108,14 @@ export const useMidnight = () => {
     [providers, refreshLedgerState],
   );
 
-  const contribute = useCallback(
-    async (amount: bigint) => {
+  const celebrate = useCallback(
+    async (amount: bigint, label: string) => {
       if (!contract || !providers || !contractAddress) return;
       setError(null);
-      setBusy(`Proving + submitting contribute(${amount}) via Lace...`);
+      setBusy(`Proving + submitting celebrate(${amount}) via Lace...`);
       try {
         const before = ledgerState;
-        const tx = await contributeCircuit(contract, amount);
+        const tx = await celebrateCircuit(contract, amount, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
         await refreshLedgerState(contractAddress, providers);
         return before;
@@ -136,28 +136,13 @@ export const useMidnight = () => {
     }
   }, [isConnected, providers, contract, join]);
 
-  const resetMilestones = useCallback(async () => {
-    if (!contract || !providers || !contractAddress) return;
-    setError(null);
-    setBusy("Proving + submitting resetMilestones() via Lace...");
-    try {
-      const tx = await resetMilestonesCircuit(contract);
-      setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
-      await refreshLedgerState(contractAddress, providers);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(null);
-    }
-  }, [contract, providers, contractAddress, refreshLedgerState]);
-
   return useMemo(
     () => ({
       isConnected,
       wallet,
       contractAddress,
       ledgerState,
-      ownerSecretKeyHex,
+      identitySecretKeyHex,
       busy,
       error,
       lastTx,
@@ -165,15 +150,14 @@ export const useMidnight = () => {
       connect,
       disconnect,
       join,
-      contribute,
-      resetMilestones,
+      celebrate,
     }),
     [
       isConnected,
       wallet,
       contractAddress,
       ledgerState,
-      ownerSecretKeyHex,
+      identitySecretKeyHex,
       busy,
       error,
       lastTx,
@@ -181,8 +165,7 @@ export const useMidnight = () => {
       connect,
       disconnect,
       join,
-      contribute,
-      resetMilestones,
+      celebrate,
     ],
   );
 };

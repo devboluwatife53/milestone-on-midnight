@@ -72,15 +72,15 @@ export interface WalletContext {
   shieldedSecretKeys: ledger.ZswapSecretKeys;
   dustSecretKey: ledger.DustSecretKey;
   unshieldedKeystore: UnshieldedKeystore;
-  /** The 32-byte secret key used inside the contract's localSecretKey witness. */
-  ownerSecretKey: Uint8Array;
+  /** The 32-byte secret key used inside the contract's localSecretKey witness — this caller's pseudonymous identity for authoring posts. */
+  identitySecretKey: Uint8Array;
 }
 
 export const milestoneContractInstance: MilestoneContract = new Milestone.Contract(
   witnesses,
 );
 
-/** Read the public milestone counter + last disclosed total directly from the chain. */
+/** Read the public celebration feed + total count directly from the chain. */
 export const getMilestoneLedgerState = async (
   providers: MilestoneProviders,
   contractAddress: ContractAddress,
@@ -90,23 +90,24 @@ export const getMilestoneLedgerState = async (
   if (state == null) return null;
   const l = Milestone.ledger(state.data);
   return {
-    owner: toHex(l.owner),
-    milestonesReached: l.milestonesReached,
-    lastDisclosedTotal: l.lastDisclosedTotal,
+    totalCelebrated: l.totalCelebrated,
+    feed: [...l.feed].map((post) => ({
+      author: toHex(post.author),
+      tier: post.tier,
+      label: post.label,
+    })),
   };
 };
 
 export const deploy = async (
   providers: MilestoneProviders,
-  ownerSecretKey: Uint8Array,
+  secretKey: Uint8Array,
 ): Promise<DeployedMilestoneContract> => {
-  const ownerPublicKey = Milestone.pureCircuits.publicKey(ownerSecretKey);
-  const privateState: MilestonePrivateState = createMilestonePrivateState(ownerSecretKey);
+  const privateState: MilestonePrivateState = createMilestonePrivateState(secretKey);
   const contract = await deployContract(providers, {
     compiledContract: milestoneCompiledContract,
     privateStateId: "milestonePrivateState",
     initialPrivateState: privateState,
-    args: [ownerPublicKey],
   });
   return contract;
 };
@@ -114,20 +115,21 @@ export const deploy = async (
 export const joinContract = async (
   providers: MilestoneProviders,
   contractAddress: string,
-  ownerSecretKey: Uint8Array,
+  secretKey: Uint8Array,
 ): Promise<DeployedMilestoneContract> =>
   findDeployedContract(providers, {
     contractAddress,
     compiledContract: milestoneCompiledContract,
     privateStateId: "milestonePrivateState",
-    initialPrivateState: createMilestonePrivateState(ownerSecretKey),
+    initialPrivateState: createMilestonePrivateState(secretKey),
   });
 
-export const contribute = async (
+export const celebrate = async (
   contract: DeployedMilestoneContract,
   amount: bigint,
+  label: string,
 ): Promise<FinalizedTxData> => {
-  const finalizedTxData = await contract.callTx.contribute(amount);
+  const finalizedTxData = await contract.callTx.celebrate(amount, label);
   return finalizedTxData.public;
 };
 
@@ -289,7 +291,7 @@ const registerForDustGeneration = async (
 export const buildWalletAndWaitForFunds = async (
   config: Config,
   seed: string,
-  ownerSecretKey: Uint8Array,
+  identitySecretKey: Uint8Array,
 ): Promise<WalletContext> => {
   const keys = deriveKeysFromSeed(seed);
   const shieldedSecretKeys = ledger.ZswapSecretKeys.fromSeed(keys[Roles.Zswap]);
@@ -341,25 +343,26 @@ ${
 
   await registerForDustGeneration(wallet, unshieldedKeystore);
 
-  return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore, ownerSecretKey };
+  return { wallet, shieldedSecretKeys, dustSecretKey, unshieldedKeystore, identitySecretKey };
 };
 
-/** Create a fresh wallet + fresh contract-owner secret key. Both seeds are printed once. */
+/** Create a fresh wallet + fresh identity secret key. Both seeds are printed once. */
 export const buildFreshWallet = async (config: Config): Promise<WalletContext> => {
   const seed = toHex(Buffer.from(generateRandomSeed()));
-  const ownerSecretKey = crypto.getRandomValues(new Uint8Array(32));
+  const identitySecretKey = crypto.getRandomValues(new Uint8Array(32));
   console.log(`
 ${DIV}
   New Wallet Seed — save this before continuing, it will not be shown again
 ${DIV}
   ${seed}
 ${DIV}
-  Contract owner secret key (also save this — only you can reset milestones)
+  Identity secret key (also save this — reuse it to keep celebrating under
+  the same pseudonymous author on the public feed)
 ${DIV}
-  ${toHex(Buffer.from(ownerSecretKey))}
+  ${toHex(Buffer.from(identitySecretKey))}
 ${DIV}
 `);
-  return buildWalletAndWaitForFunds(config, seed, ownerSecretKey);
+  return buildWalletAndWaitForFunds(config, seed, identitySecretKey);
 };
 
 export const configureProviders = async (ctx: WalletContext, config: Config) => {
