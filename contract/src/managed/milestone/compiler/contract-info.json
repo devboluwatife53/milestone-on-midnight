@@ -9,7 +9,7 @@
       "proof": true,
       "arguments": [
         {
-          "name": "amount",
+          "name": "percent",
           "type": {
             "type-name": "Uint",
             "maxval": 18446744073709551615
@@ -62,7 +62,7 @@
       "name": "addToHiddenProgress",
       "arguments": [
         {
-          "name": "amount",
+          "name": "percent",
           "type": {
             "type-name": "Uint",
             "maxval": 18446744073709551615

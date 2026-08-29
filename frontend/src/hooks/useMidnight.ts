@@ -109,13 +109,13 @@ export const useMidnight = () => {
   );
 
   const celebrate = useCallback(
-    async (amount: bigint, label: string) => {
+    async (percent: bigint, label: string) => {
       if (!contract || !providers || !contractAddress) return;
       setError(null);
-      setBusy(`Proving + submitting celebrate(${amount}) via Lace...`);
+      setBusy(`Proving + submitting celebrate(${percent}%) via Lace...`);
       try {
         const before = ledgerState;
-        const tx = await celebrateCircuit(contract, amount, label);
+        const tx = await celebrateCircuit(contract, percent, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
         await refreshLedgerState(contractAddress, providers);
         return before;

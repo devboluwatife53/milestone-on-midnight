@@ -33,9 +33,9 @@ export const witnesses = {
 
   addToHiddenProgress: (
     { privateState }: WitnessContext<Ledger, MilestonePrivateState>,
-    amount: bigint,
+    percent: bigint,
   ): [MilestonePrivateState, bigint] => {
-    const newTotal = privateState.hiddenProgress + amount;
+    const newTotal = privateState.hiddenProgress + percent;
     return [{ ...privateState, hiddenProgress: newTotal }, newTotal];
   },
 

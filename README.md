@@ -3,28 +3,28 @@
 ## Product idea
 
 Milestone is a public celebration wall built with Compact. Anyone can
-connect a wallet and log private progress toward a personal goal — money
-saved, distance run, whatever they're privately tracking. The amount itself
-is never written to the ledger. The moment their private running total
-crosses the next milestone (every 100 units), a post is disclosed to a
-shared public feed: the achievement they chose to share ("got a new car")
-and the tier they reached — never the number behind it. It's a small,
-concrete illustration of the core Midnight pattern: keep sensitive inputs
-private by default, and only reveal exactly the fact the application
-actually needs the world to see — nothing more.
+connect a wallet and log private percentage progress (1-100%) toward a
+personal goal — money saved, distance run, whatever they're privately
+tracking. The percentage itself is never written to the ledger. The moment
+their private running total crosses a full 100% (one completed goal), a
+post is disclosed to a shared public feed: the achievement they chose to
+share ("got a new car") and the tier they reached — never the number
+behind it. It's a small, concrete illustration of the core Midnight
+pattern: keep sensitive inputs private by default, and only reveal exactly
+the fact the application actually needs the world to see — nothing more.
 
 ## Deployed contract
 
 - Network: **Preview**
-- Contract address: [`b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e`](https://preview.midnightexplorer.com/contracts/b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e) — view live on Midnight Explorer
+- Contract address: [`bcba496b7ad530891b78ac81316fb8f75eee797aa67a3082b1025afc4d8ab345`](https://preview.midnightexplorer.com/contracts/bcba496b7ad530891b78ac81316fb8f75eee797aa67a3082b1025afc4d8ab345) — view live on Midnight Explorer
 - Verify independently at any time (no wallet needed, reads the indexer directly):
   ```bash
-  CONTRACT_ADDRESS=b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e npm run status:preview
+  CONTRACT_ADDRESS=bcba496b7ad530891b78ac81316fb8f75eee797aa67a3082b1025afc4d8ab345 npm run status:preview
   ```
 
 ## Live demo
 
-`TODO: link once deployed to Vercel/Netlify — see frontend/ for the build to deploy.`
+**[milestone-on-midnight.vercel.app](https://milestone-on-midnight.vercel.app)** — connect Lace (Preview network) and celebrate a milestone.
 
 ## Demo video
 
@@ -48,15 +48,15 @@ so explicitly:
   to write a witness-derived value to the ledger without wrapping it in
   `disclose()` is a **compile error**.
 
-The `celebrate` circuit shows the boundary in action: it computes a new
-private total from a witness, but only pushes a post to the public `feed`
-(and increments `totalCelebrated`) once that total crosses the caller's
-next personal milestone threshold. Every call below the threshold leaves
-zero trace on chain — not the amount, not the achievement text, not even
-the fact that a call happened at all (beyond the transaction itself being
-submitted). The author on a disclosed post is a hash derived from the
-caller's own secret key via `publicKey()` — pseudonymous, provable, never
-tied to a real identity.
+The `celebrate` circuit shows the boundary in action: it takes a private
+percentage (1-100%), computes a new cumulative total from a witness, but
+only pushes a post to the public `feed` (and increments `totalCelebrated`)
+once that total crosses a full 100% (one completed goal). Every call below
+100% leaves zero trace on chain — not the percentage, not the achievement
+text, not even the fact that a call happened at all (beyond the
+transaction itself being submitted). The author on a disclosed post is a
+hash derived from the caller's own secret key via `publicKey()` —
+pseudonymous, provable, never tied to a real identity.
 
 ## Repo layout
 
@@ -129,7 +129,7 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 8. **Log a milestone from the CLI** against an already-deployed contract:
    ```bash
    CONTRACT_ADDRESS=<address> WALLET_SEED=<hex> IDENTITY_SECRET_KEY=<hex> \
-     AMOUNT=150 LABEL="got a new car" npm run celebrate:preprod
+     PERCENT=60 LABEL="got a new car" npm run celebrate:preprod
    ```
 9. **Check a deployed contract's public feed** at any time:
    ```bash
@@ -178,11 +178,12 @@ browser can fetch them over HTTP.
 
 **Observable privacy behavior**: the celebrate form calls `celebrate()` for
 real every time — a proven, submitted transaction — but diffs
-`totalCelebrated` before and after. Submit progress that doesn't cross a
-milestone and the feed is provably unchanged: not hidden by the UI, but
-because the chain itself never received the number or the label. Submit
-progress that crosses a threshold and your achievement appears at the top
-of the wall — but never the private amount you typed to get there.
+`totalCelebrated` before and after. Submit a percentage that doesn't push
+your cumulative progress past 100% and the feed is provably unchanged: not
+hidden by the UI, but because the chain itself never received the number
+or the label. Submit progress that crosses 100% and your achievement
+appears at the top of the wall — but never the private percentage you
+typed to get there.
 
 ## Screenshots
 

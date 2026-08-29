@@ -69,10 +69,10 @@ export class MilestoneSimulator {
     return this.circuitContext.currentPrivateState;
   }
 
-  public celebrate(amount: bigint, label: string): Ledger {
+  public celebrate(percent: bigint, label: string): Ledger {
     this.circuitContext = this.contract.impureCircuits.celebrate(
       this.circuitContext,
-      amount,
+      percent,
       label,
     ).context;
     return ledger(this.circuitContext.currentQueryContext.state);

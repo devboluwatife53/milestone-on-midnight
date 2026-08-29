@@ -21,9 +21,9 @@ export const MilestoneFeed = ({ ledgerState }: { ledgerState: LedgerState | null
         </div>
       </div>
       <p className="panel__hint">
-        Everyone posts here anonymously by pseudonymous author key. Individual amounts stay
-        private — only the achievement text and tier reached are ever revealed, and only once a
-        personal milestone is crossed.
+        Everyone posts here anonymously by pseudonymous author key. Individual percentages stay
+        private — only the achievement text and tier reached are ever revealed, and only once
+        someone's private progress crosses a full 100%.
       </p>
 
       {ledgerState.feed.length === 0 ? (

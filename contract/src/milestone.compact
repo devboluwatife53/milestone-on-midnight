@@ -21,7 +21,7 @@ constructor() {}
 // Witnesses — private, off-chain state never written to the ledger.
 // ======================================================================
 witness localSecretKey(): Bytes<32>;
-witness addToHiddenProgress(amount: Uint<64>): Uint<64>;
+witness addToHiddenProgress(percent: Uint<64>): Uint<64>;
 witness currentTier(): Uint<64>;
 witness advanceTier(): [];
 
@@ -29,17 +29,18 @@ witness advanceTier(): [];
 // Circuits
 // ======================================================================
 
-// Anyone can log private progress toward a personal goal — money saved,
-// distance run, whatever the caller is privately tracking. The amount
-// never touches the ledger. Only when the caller's cumulative hidden
-// progress crosses their next personal milestone tier (every 100 units)
-// do we disclose a public celebration post to the shared feed: the tier
-// reached and the label the caller chose to share ("got a new car") —
-// never the private amount behind it.
-export circuit celebrate(amount: Uint<64>, label: Opaque<"string">): [] {
-  assert(amount > 0, "Progress must be positive");
+// Anyone can log private percentage progress toward a personal goal —
+// money saved, distance run, whatever the caller is privately tracking,
+// expressed as a percentage of that goal. The percentage never touches the
+// ledger. Only when the caller's cumulative hidden progress crosses their
+// next full 100% (one completed goal) do we disclose a public celebration
+// post to the shared feed: the tier reached and the label the caller chose
+// to share ("got a new car") — never the private percentage behind it.
+export circuit celebrate(percent: Uint<64>, label: Opaque<"string">): [] {
+  assert(percent > 0, "Percent must be positive");
+  assert(percent <= 100, "Percent must be at most 100");
   const milestoneStep: Uint<64> = 100;
-  const newTotal = addToHiddenProgress(amount);
+  const newTotal = addToHiddenProgress(percent);
   const tier = currentTier();
   const nextThreshold = (tier + 1) * milestoneStep;
   const crossed = disclose(newTotal >= nextThreshold);

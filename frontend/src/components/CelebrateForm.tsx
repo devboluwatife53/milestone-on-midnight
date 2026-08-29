@@ -4,11 +4,11 @@ import type { LedgerState } from "../hooks/useMidnight";
 /**
  * This is the "observable privacy behavior" the assignment asks for: the
  * celebrate() circuit runs and submits a real, proven transaction every
- * time, but your private amount only ever shows up in the public feed when
- * it pushes your hidden running progress across your next personal
- * milestone. Below that, the feed is provably unchanged — not hidden by
- * the UI, but because the chain itself never received the number, and your
- * achievement text never posted either.
+ * time, but your private percentage only ever shows up in the public feed
+ * when it pushes your hidden running progress across the next full 100%
+ * (one completed goal). Below that, the feed is provably unchanged — not
+ * hidden by the UI, but because the chain itself never received the
+ * number, and your achievement text never posted either.
  */
 export const CelebrateForm = ({
   busy,
@@ -19,27 +19,27 @@ export const CelebrateForm = ({
   busy: string | null;
   lastTx: { txId: string; blockHeight?: number } | null;
   ledgerState: LedgerState | null;
-  onCelebrate: (amount: bigint, label: string) => Promise<LedgerState | null | undefined>;
+  onCelebrate: (percent: bigint, label: string) => Promise<LedgerState | null | undefined>;
 }) => {
-  const [amount, setAmount] = useState("10");
+  const [percent, setPercent] = useState("10");
   const [label, setLabel] = useState("");
   const [diff, setDiff] = useState<{
     before: LedgerState;
-    submittedAmount: bigint;
+    submittedPercent: bigint;
     submittedLabel: string;
   } | null>(null);
 
   const submit = async () => {
     let value: bigint;
     try {
-      value = BigInt(amount || "0");
+      value = BigInt(percent || "0");
     } catch {
       return;
     }
-    if (value <= 0n || !label.trim()) return;
+    if (value <= 0n || value > 100n || !label.trim()) return;
     const before = await onCelebrate(value, label.trim());
     if (before) {
-      setDiff({ before, submittedAmount: value, submittedLabel: label.trim() });
+      setDiff({ before, submittedPercent: value, submittedLabel: label.trim() });
       setLabel("");
     }
   };
@@ -50,17 +50,18 @@ export const CelebrateForm = ({
     <section className="panel">
       <h2>Log progress toward a milestone</h2>
       <p className="panel__hint">
-        The amount below is a private circuit argument — it never touches the ledger. Your label
-        (e.g. "got a new car") only posts to the public feed once your private running total
-        crosses the next multiple of 100.
+        The percentage below is a private circuit argument (1-100%) — it never touches the
+        ledger. Your label (e.g. "got a new car") only posts to the public feed once your private
+        running total crosses the next full 100% (one completed goal).
       </p>
       <div className="panel__row">
         <input
           type="number"
           min="1"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="private amount"
+          max="100"
+          value={percent}
+          onChange={(e) => setPercent(e.target.value)}
+          placeholder="% progress"
         />
         <input
           type="text"
@@ -84,17 +85,17 @@ export const CelebrateForm = ({
 
       {diff && (
         <p className={`panel__hint ${posted ? "panel__hint--disclosed" : "panel__hint--private"}`}>
-          Submitted a proven <code>celebrate({diff.submittedAmount.toString()}, "
+          Submitted a proven <code>celebrate({diff.submittedPercent.toString()}, "
           {diff.submittedLabel}")</code> transaction.{" "}
           {posted ? (
             <>
-              This crossed a milestone: "{diff.submittedLabel}" was just posted to the public
-              feed — but not the private amount that got you there.
+              This crossed 100%: "{diff.submittedLabel}" was just posted to the public feed — but
+              not the private percentage that got you there.
             </>
           ) : (
             <>
-              The feed is unchanged — that {diff.submittedAmount.toString()}-unit contribution
-              left zero trace on chain beyond "some valid call happened".
+              The feed is unchanged — that {diff.submittedPercent.toString()}% of progress left
+              zero trace on chain beyond "some valid call happened".
             </>
           )}
         </p>

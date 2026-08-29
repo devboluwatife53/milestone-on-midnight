@@ -5,20 +5,20 @@ export type MilestonePost = { author: Uint8Array; tier: bigint; label: string };
 export type Witnesses<PS> = {
   localSecretKey(context: __compactRuntime.WitnessContext<Ledger, PS>): [PS, Uint8Array];
   addToHiddenProgress(context: __compactRuntime.WitnessContext<Ledger, PS>,
-                      amount_0: bigint): [PS, bigint];
+                      percent_0: bigint): [PS, bigint];
   currentTier(context: __compactRuntime.WitnessContext<Ledger, PS>): [PS, bigint];
   advanceTier(context: __compactRuntime.WitnessContext<Ledger, PS>): [PS, []];
 }
 
 export type ImpureCircuits<PS> = {
   celebrate(context: __compactRuntime.CircuitContext<PS>,
-            amount_0: bigint,
+            percent_0: bigint,
             label_0: string): __compactRuntime.CircuitResults<PS, []>;
 }
 
 export type ProvableCircuits<PS> = {
   celebrate(context: __compactRuntime.CircuitContext<PS>,
-            amount_0: bigint,
+            percent_0: bigint,
             label_0: string): __compactRuntime.CircuitResults<PS, []>;
 }
 
@@ -28,7 +28,7 @@ export type PureCircuits = {
 
 export type Circuits<PS> = {
   celebrate(context: __compactRuntime.CircuitContext<PS>,
-            amount_0: bigint,
+            percent_0: bigint,
             label_0: string): __compactRuntime.CircuitResults<PS, []>;
   publicKey(context: __compactRuntime.CircuitContext<PS>, sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, Uint8Array>;
 }

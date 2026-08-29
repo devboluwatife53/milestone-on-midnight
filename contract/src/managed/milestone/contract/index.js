@@ -115,7 +115,7 @@ export class Contract {
           throw new __compactRuntime.CompactError(`celebrate: expected 3 arguments (as invoked from Typescript), received ${args_1.length}`);
         }
         const contextOrig_0 = args_1[0];
-        const amount_0 = args_1[1];
+        const percent_0 = args_1[1];
         const label_0 = args_1[2];
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('celebrate',
@@ -124,17 +124,17 @@ export class Contract {
                                      'CircuitContext',
                                      contextOrig_0)
         }
-        if (!(typeof(amount_0) === 'bigint' && amount_0 >= 0n && amount_0 <= 18446744073709551615n)) {
+        if (!(typeof(percent_0) === 'bigint' && percent_0 >= 0n && percent_0 <= 18446744073709551615n)) {
           __compactRuntime.typeError('celebrate',
                                      'argument 1 (argument 2 as invoked from Typescript)',
                                      'milestone.compact line 39 char 1',
                                      'Uint<0..18446744073709551616>',
-                                     amount_0)
+                                     percent_0)
         }
         const context = { ...contextOrig_0, gasCost: __compactRuntime.emptyRunningCost() };
         const partialProofData = {
           input: {
-            value: _descriptor_1.toValue(amount_0).concat(_descriptor_2.toValue(label_0)),
+            value: _descriptor_1.toValue(percent_0).concat(_descriptor_2.toValue(label_0)),
             alignment: _descriptor_1.alignment().concat(_descriptor_2.alignment())
           },
           output: undefined,
@@ -143,7 +143,7 @@ export class Contract {
         };
         const result_0 = this._celebrate_0(context,
                                            partialProofData,
-                                           amount_0,
+                                           percent_0,
                                            label_0);
         partialProofData.output = { value: [], alignment: [] };
         return { result: result_0, context: context, proofData: partialProofData, gasCost: context.gasCost };
@@ -235,10 +235,10 @@ export class Contract {
     });
     return result_0;
   }
-  _addToHiddenProgress_0(context, partialProofData, amount_0) {
+  _addToHiddenProgress_0(context, partialProofData, percent_0) {
     const witnessContext_0 = __compactRuntime.createWitnessContext(ledger(context.currentQueryContext.state), context.currentPrivateState, context.currentQueryContext.address);
     const [nextPrivateState_0, result_0] = this.witnesses.addToHiddenProgress(witnessContext_0,
-                                                                              amount_0);
+                                                                              percent_0);
     context.currentPrivateState = nextPrivateState_0;
     if (!(typeof(result_0) === 'bigint' && result_0 >= 0n && result_0 <= 18446744073709551615n)) {
       __compactRuntime.typeError('addToHiddenProgress',
@@ -287,12 +287,13 @@ export class Contract {
     });
     return result_0;
   }
-  _celebrate_0(context, partialProofData, amount_0, label_0) {
-    __compactRuntime.assert(amount_0 > 0n, 'Progress must be positive');
+  _celebrate_0(context, partialProofData, percent_0, label_0) {
+    __compactRuntime.assert(percent_0 > 0n, 'Percent must be positive');
+    __compactRuntime.assert(percent_0 <= 100n, 'Percent must be at most 100');
     const milestoneStep_0 = 100n;
     const newTotal_0 = this._addToHiddenProgress_0(context,
                                                    partialProofData,
-                                                   amount_0);
+                                                   percent_0);
     const tier_0 = this._currentTier_0(context, partialProofData);
     const nextThreshold_0 = (tier_0 + 1n) * milestoneStep_0;
     const crossed_0 = newTotal_0 >= nextThreshold_0;
@@ -304,7 +305,7 @@ export class Contract {
                       tier:
                         ((t1) => {
                           if (t1 > 18446744073709551615n) {
-                            throw new __compactRuntime.CompactError('milestone.compact line 51 char 22: cast from Field or Uint value to smaller Uint value failed: ' + t1 + ' is greater than 18446744073709551615');
+                            throw new __compactRuntime.CompactError('milestone.compact line 52 char 22: cast from Field or Uint value to smaller Uint value failed: ' + t1 + ' is greater than 18446744073709551615');
                           }
                           return t1;
                         })(tier_0 + 1n),
@@ -523,7 +524,7 @@ export const pureCircuits = {
     if (!(sk_0.buffer instanceof ArrayBuffer && sk_0.BYTES_PER_ELEMENT === 1 && sk_0.length === 32)) {
       __compactRuntime.typeError('publicKey',
                                  'argument 1',
-                                 'milestone.compact line 58 char 1',
+                                 'milestone.compact line 59 char 1',
                                  'Bytes<32>',
                                  sk_0)
     }

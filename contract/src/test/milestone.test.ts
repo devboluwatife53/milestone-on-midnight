@@ -15,7 +15,7 @@ describe("Milestone forum contract", () => {
     expect(simulator.getFeed()).toEqual([]);
   });
 
-  it("keeps small progress private (no ledger change) below the milestone threshold", () => {
+  it("keeps small progress private (no ledger change) below 100%", () => {
     const key = randomBytes(32);
     const simulator = new MilestoneSimulator(key);
 
@@ -24,7 +24,7 @@ describe("Milestone forum contract", () => {
     expect(simulator.getFeed()).toEqual([]);
 
     simulator.celebrate(30n, "saved a bit more");
-    // hidden progress is now 70, still under the 100 threshold
+    // hidden progress is now 70%, still under the 100% threshold
     expect(simulator.getLedger().totalCelebrated).toEqual(0n);
     expect(simulator.getFeed()).toEqual([]);
 
@@ -32,12 +32,12 @@ describe("Milestone forum contract", () => {
     expect(simulator.getPrivateState().hiddenProgress).toEqual(70n);
   });
 
-  it("posts to the public feed only once a milestone is crossed", () => {
+  it("posts to the public feed only once progress reaches 100%", () => {
     const key = randomBytes(32);
     const simulator = new MilestoneSimulator(key);
 
     simulator.celebrate(40n, "got closer");
-    simulator.celebrate(70n, "got a new car"); // hidden progress = 110, crosses the 100 threshold
+    simulator.celebrate(70n, "got a new car"); // hidden progress = 110%, crosses 100%
 
     expect(simulator.getLedger().totalCelebrated).toEqual(1n);
     const feed = simulator.getFeed();
@@ -47,7 +47,7 @@ describe("Milestone forum contract", () => {
     expect(feed[0].author).toEqual(MilestoneSimulator.publicKey(key));
   });
 
-  it("never discloses the private label or amount of a call that doesn't cross a milestone", () => {
+  it("never discloses the private percentage or label of a call that doesn't cross 100%", () => {
     const key = randomBytes(32);
     const simulator = new MilestoneSimulator(key);
 
@@ -58,11 +58,11 @@ describe("Milestone forum contract", () => {
   it("newest posts appear first in the feed", () => {
     const alice = randomBytes(32);
     const simulator = new MilestoneSimulator(alice);
-    simulator.celebrate(150n, "first milestone");
+    simulator.celebrate(100n, "first milestone");
 
     const bob = randomBytes(32);
     simulator.switchUser(bob);
-    simulator.celebrate(150n, "second milestone");
+    simulator.celebrate(100n, "second milestone");
 
     const feed = simulator.getFeed();
     expect(feed).toHaveLength(2);
@@ -70,20 +70,28 @@ describe("Milestone forum contract", () => {
     expect(feed[1].label).toEqual("first milestone");
   });
 
-  it("can cross multiple milestone boundaries in a single call but only posts once", () => {
+  it("hitting exactly 100% in one call posts once", () => {
     const key = randomBytes(32);
     const simulator = new MilestoneSimulator(key);
 
-    simulator.celebrate(250n, "huge leap forward");
+    simulator.celebrate(100n, "nailed it in one go");
     expect(simulator.getLedger().totalCelebrated).toEqual(1n);
     expect(simulator.getFeed()).toHaveLength(1);
   });
 
-  it("rejects a non-positive amount", () => {
+  it("rejects a non-positive percentage", () => {
     const key = randomBytes(32);
     const simulator = new MilestoneSimulator(key);
     expect(() => simulator.celebrate(0n, "nope")).toThrow(
-      "Progress must be positive",
+      "Percent must be positive",
+    );
+  });
+
+  it("rejects a percentage over 100", () => {
+    const key = randomBytes(32);
+    const simulator = new MilestoneSimulator(key);
+    expect(() => simulator.celebrate(101n, "nope")).toThrow(
+      "Percent must be at most 100",
     );
   });
 });

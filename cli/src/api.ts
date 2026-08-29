@@ -126,10 +126,10 @@ export const joinContract = async (
 
 export const celebrate = async (
   contract: DeployedMilestoneContract,
-  amount: bigint,
+  percent: bigint,
   label: string,
 ): Promise<FinalizedTxData> => {
-  const finalizedTxData = await contract.callTx.celebrate(amount, label);
+  const finalizedTxData = await contract.callTx.celebrate(percent, label);
   return finalizedTxData.public;
 };
 
