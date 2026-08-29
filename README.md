@@ -23,9 +23,9 @@ actually needs the world to see — nothing more.
 
 A deployment also exists on **Preview**:
 
-- Contract address: [`4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19`](https://preview.midnightexplorer.com/contracts/4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19) — view live on Midnight Explorer
+- Contract address: [`b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e`](https://preview.midnightexplorer.com/contracts/b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e) — view live on Midnight Explorer
   ```bash
-  CONTRACT_ADDRESS=4f1ceaaf29f739fa140df1cf71397df3d5fd917cade9d6a38d86699c1873dd19 npm run status:preview
+  CONTRACT_ADDRESS=b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e npm run status:preview
   ```
 
 ## Live demo
