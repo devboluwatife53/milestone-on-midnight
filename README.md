@@ -15,15 +15,9 @@ actually needs the world to see — nothing more.
 
 ## Deployed contract
 
-- Network: **Preprod** — TODO: fill in the address here after running `npm run deploy:preprod`
-- Verify independently at any time (no wallet needed, reads the indexer directly):
-  ```bash
-  CONTRACT_ADDRESS=<address> npm run status:preprod
-  ```
-
-A deployment also exists on **Preview**:
-
+- Network: **Preview**
 - Contract address: [`b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e`](https://preview.midnightexplorer.com/contracts/b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e) — view live on Midnight Explorer
+- Verify independently at any time (no wallet needed, reads the indexer directly):
   ```bash
   CONTRACT_ADDRESS=b02281de539e831c9632e406c40b0516ac3a5599b0610a186da119cd5340d57e npm run status:preview
   ```
@@ -156,10 +150,11 @@ cd frontend
 npm run dev            # http://localhost:5173
 ```
 
-By default it targets **Preprod** (`VITE_NETWORK=preprod`); set
-`frontend/.env.local` to `VITE_NETWORK=preview` to point it at Preview
-instead (see `.env.example`). `predev`/`prebuild` build the `contract`
-workspace and copy its compiled circuit artifacts from
+The compiler defaults to **Preprod** (`VITE_NETWORK=preprod`) when unset,
+but `frontend/.env.local` targets **Preview** (`VITE_NETWORK=preview`)
+against the live contract address above — set it to `preprod` instead once
+a Preprod deployment exists (see `.env.example`). `predev`/`prebuild` build
+the `contract` workspace and copy its compiled circuit artifacts from
 `contract/src/managed/milestone` into `public/managed/milestone` so the
 browser can fetch them over HTTP.
 
