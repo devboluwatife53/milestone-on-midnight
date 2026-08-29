@@ -36,23 +36,6 @@ A deployment also exists on **Preview**:
 
 `TODO: link a short recording of wallet connect + a successful celebrate() call landing on the wall.`
 
-## Submission checklist
-
-- [x] Midnight.js SDK + DApp Connector API — `frontend/src/midnight/`
-- [x] Lace connect / disconnect — `frontend/src/midnight/dappConnector.ts`,
-      wired into the UI via `WalletBar`
-- [x] Circuit called from the frontend, result handled — `celebrate()` in
-      `frontend/src/midnight/contract.ts`, called from `CelebrateForm`
-- [x] Observable privacy behavior — see "Observable privacy behavior" below
-- [x] Local private state managed client-side — IndexedDB via
-      `levelPrivateStateProvider`, see "Frontend" section below
-- [ ] Contract deployed to Preprod with a verifiable address — see
-      "Deployed contract" above (TODO once `npm run deploy:preprod` is run)
-- [ ] Live demo link (Vercel/Netlify) — see "Live demo" above
-- [ ] Demo video (wallet connect + successful circuit call) — see "Demo
-      video" above
-- [x] Minimum 8 meaningful commits — `git log`
-
 ## Public state vs. private witness
 
 Compact splits contract data into two worlds that never mix unless you say
