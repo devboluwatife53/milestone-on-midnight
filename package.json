@@ -10,5 +10,8 @@
     "contract",
     "cli",
     "frontend"
-  ]
+  ],
+  "overrides": {
+    "@midnight-ntwrk/onchain-runtime-v3": "3.1.0"
+  }
 }
