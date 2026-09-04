@@ -21,10 +21,10 @@ application actually needs the world to see — nothing more.
 ## Deployed contract
 
 - Network: **Preview**
-- Contract address: `PLACEHOLDER_CONTRACT_ADDRESS` — view live on [Midnight Explorer](https://preview.midnightexplorer.com/contracts/PLACEHOLDER_CONTRACT_ADDRESS)
+- Contract address: `ca04bbcc20cd41eeb7c791ecc9c74b817af3663df64f11abbfa838167e7ad05a` — view live on [Midnight Explorer](https://preview.midnightexplorer.com/contracts/ca04bbcc20cd41eeb7c791ecc9c74b817af3663df64f11abbfa838167e7ad05a)
 - Verify independently at any time (no wallet needed, reads the indexer directly):
   ```bash
-  CONTRACT_ADDRESS=PLACEHOLDER_CONTRACT_ADDRESS npm run status:preview
+  CONTRACT_ADDRESS=ca04bbcc20cd41eeb7c791ecc9c74b817af3663df64f11abbfa838167e7ad05a npm run status:preview
   ```
 
 ## Live demo
