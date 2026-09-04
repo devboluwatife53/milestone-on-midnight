@@ -49,12 +49,8 @@ export class MilestoneSimulator {
     };
   }
 
-  public switchUser(secretKey: Uint8Array, hiddenProgress = 0n, tierReached = 0n) {
-    this.circuitContext.currentPrivateState = createMilestonePrivateState(
-      secretKey,
-      hiddenProgress,
-      tierReached,
-    );
+  public switchUser(secretKey: Uint8Array) {
+    this.circuitContext.currentPrivateState = createMilestonePrivateState(secretKey);
   }
 
   public getLedger(): Ledger {
@@ -69,10 +65,18 @@ export class MilestoneSimulator {
     return this.circuitContext.currentPrivateState;
   }
 
-  public celebrate(percent: bigint, label: string): Ledger {
-    this.circuitContext = this.contract.impureCircuits.celebrate(
+  public post(label: string): Ledger {
+    this.circuitContext = this.contract.impureCircuits.post(
       this.circuitContext,
-      percent,
+      label,
+    ).context;
+    return ledger(this.circuitContext.currentQueryContext.state);
+  }
+
+  public reply(parentId: bigint, label: string): Ledger {
+    this.circuitContext = this.contract.impureCircuits.reply(
+      this.circuitContext,
+      parentId,
       label,
     ).context;
     return ledger(this.circuitContext.currentQueryContext.state);

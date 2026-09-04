@@ -6,56 +6,56 @@ import CompactStandardLibrary;
 // Public ledger state — readable by anyone on chain.
 // ======================================================================
 export struct MilestonePost {
+  id: Uint<64>;
+  parentId: Uint<64>; // 0 = top-level post; otherwise the id being replied to
   author: Bytes<32>;
-  tier: Uint<64>;
   label: Opaque<"string">;
 }
 
-// The public wall: every celebration post ever disclosed, newest first.
+// The public wall: every post and reply ever dropped, newest first.
 export ledger feed: List<MilestonePost>;
-export ledger totalCelebrated: Counter;
+export ledger postCount: Counter;
 
 constructor() {}
 
 // ======================================================================
-// Witnesses — private, off-chain state never written to the ledger.
+// Witness — private, off-chain state never written to the ledger.
 // ======================================================================
 witness localSecretKey(): Bytes<32>;
-witness addToHiddenProgress(percent: Uint<64>): Uint<64>;
-witness currentTier(): Uint<64>;
-witness advanceTier(): [];
 
 // ======================================================================
 // Circuits
 // ======================================================================
 
-// Anyone can log private percentage progress toward a personal goal —
-// money saved, distance run, whatever the caller is privately tracking,
-// expressed as a percentage of that goal. The percentage never touches the
-// ledger. Only when the caller's cumulative hidden progress crosses their
-// next full 100% (one completed goal) do we disclose a public celebration
-// post to the shared feed: the tier reached and the label the caller chose
-// to share ("got a new car") — never the private percentage behind it.
-export circuit celebrate(percent: Uint<64>, label: Opaque<"string">): [] {
-  assert(percent > 0, "Percent must be positive");
-  assert(percent <= 100, "Percent must be at most 100");
-  const milestoneStep: Uint<64> = 100;
-  const newTotal = addToHiddenProgress(percent);
-  const tier = currentTier();
-  const nextThreshold = (tier + 1) * milestoneStep;
-  const crossed = disclose(newTotal >= nextThreshold);
-  if (crossed) {
-    advanceTier();
-    const author = publicKey(localSecretKey());
-    feed.pushFront(MilestonePost {
-      author: disclose(author),
-      tier: disclose((tier + 1) as Uint<64>),
-      label: disclose(label),
-    });
-    totalCelebrated.increment(1);
-  }
+// Drop a new milestone onto the public wall.
+export circuit post(label: Opaque<"string">): [] {
+  postCount.increment(1);
+  const author = publicKey(localSecretKey());
+  feed.pushFront(MilestonePost {
+    id: postCount,
+    parentId: 0,
+    author: disclose(author),
+    label: disclose(label),
+  });
 }
 
+// Reply to an existing post (or reply) on the wall.
+export circuit reply(parentId: Uint<64>, label: Opaque<"string">): [] {
+  assert(parentId > 0, "Invalid parent post");
+  assert(parentId <= postCount, "Parent post does not exist");
+  postCount.increment(1);
+  const author = publicKey(localSecretKey());
+  feed.pushFront(MilestonePost {
+    id: postCount,
+    parentId: disclose(parentId),
+    author: disclose(author),
+    label: disclose(label),
+  });
+}
+
+// Derive a stable, pseudonymous author id from the caller's private secret
+// key. The chain only ever sees this one-way hash — never the key itself,
+// and never the wallet's real address.
 export circuit publicKey(sk: Bytes<32>): Bytes<32> {
   return persistentHash<Vector<2, Bytes<32>>>([pad(32, "milestone:pk:"), sk]);
 }
