@@ -4,7 +4,9 @@ import { toHex, fromHex } from "@midnight-ntwrk/midnight-js/utils";
 import { connectWallet, disconnectWallet } from "../midnight/dappConnector";
 import { buildProviders } from "../midnight/providers";
 import {
-  celebrate as celebrateCircuit,
+  post as postCircuit,
+  reply as replyCircuit,
+  derivePseudonym,
   getMilestoneLedgerState,
   joinContract as joinContractCircuit,
   type DeployedMilestoneContract,
@@ -14,7 +16,7 @@ import {
 import { defaultContractAddress } from "../midnight/config";
 
 export type LedgerState = {
-  totalCelebrated: bigint;
+  postCount: bigint;
   feed: MilestonePost[];
 };
 
@@ -48,6 +50,18 @@ export const useMidnight = () => {
 
   const isConnected = api !== null;
 
+  // The one-way hash the chain actually sees in place of this wallet's real
+  // address — the "observable privacy behavior": derived entirely
+  // client-side, never a network call, and never equal to the wallet
+  // address it stands in for.
+  const pseudonym = useMemo(
+    () =>
+      identitySecretKeyHex
+        ? derivePseudonym(new Uint8Array(fromHex(identitySecretKeyHex)))
+        : null,
+    [identitySecretKeyHex],
+  );
+
   const connect = useCallback(async () => {
     setError(null);
     setBusy("Connecting to Lace...");
@@ -72,6 +86,7 @@ export const useMidnight = () => {
     setProviders(null);
     setContract(null);
     setLedgerState(null);
+    setIdentitySecretKeyHex(null);
     setLastTx(null);
     setError(null);
   }, []);
@@ -88,7 +103,7 @@ export const useMidnight = () => {
     async (address: string, identitySecretKeyOverride?: string) => {
       if (!providers) return;
       setError(null);
-      setBusy("Loading contract...");
+      setBusy("Loading the wall...");
       try {
         const stored =
           identitySecretKeyOverride ?? localStorage.getItem(identityKeyStorageKey(address));
@@ -108,24 +123,40 @@ export const useMidnight = () => {
     [providers, refreshLedgerState],
   );
 
-  const celebrate = useCallback(
-    async (percent: bigint, label: string) => {
+  const post = useCallback(
+    async (label: string) => {
       if (!contract || !providers || !contractAddress) return;
       setError(null);
-      setBusy(`Proving + submitting celebrate(${percent}%) via Lace...`);
+      setBusy("Proving + pinning your milestone via Lace...");
       try {
-        const before = ledgerState;
-        const tx = await celebrateCircuit(contract, percent, label);
+        const tx = await postCircuit(contract, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
         await refreshLedgerState(contractAddress, providers);
-        return before;
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
         setBusy(null);
       }
     },
-    [contract, providers, contractAddress, ledgerState, refreshLedgerState],
+    [contract, providers, contractAddress, refreshLedgerState],
+  );
+
+  const reply = useCallback(
+    async (parentId: bigint, label: string) => {
+      if (!contract || !providers || !contractAddress) return;
+      setError(null);
+      setBusy("Proving + pinning your reply via Lace...");
+      try {
+        const tx = await replyCircuit(contract, parentId, label);
+        setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
+        await refreshLedgerState(contractAddress, providers);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setBusy(null);
+      }
+    },
+    [contract, providers, contractAddress, refreshLedgerState],
   );
 
   // The app targets a single, universally-known deployed contract — no
@@ -143,6 +174,7 @@ export const useMidnight = () => {
       contractAddress,
       ledgerState,
       identitySecretKeyHex,
+      pseudonym,
       busy,
       error,
       lastTx,
@@ -150,7 +182,8 @@ export const useMidnight = () => {
       connect,
       disconnect,
       join,
-      celebrate,
+      post,
+      reply,
     }),
     [
       isConnected,
@@ -158,6 +191,7 @@ export const useMidnight = () => {
       contractAddress,
       ledgerState,
       identitySecretKeyHex,
+      pseudonym,
       busy,
       error,
       lastTx,
@@ -165,7 +199,8 @@ export const useMidnight = () => {
       connect,
       disconnect,
       join,
-      celebrate,
+      post,
+      reply,
     ],
   );
 };

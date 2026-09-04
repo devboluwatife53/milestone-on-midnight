@@ -17,15 +17,15 @@ export const WalletBar = ({
   onConnect: () => void;
   onDisconnect: () => void;
 }) => (
-  <header className="wallet-bar">
-    <div className="wallet-bar__title">
-      <strong>Milestone</strong>
-      <span className="wallet-bar__network">{networkConfig.networkId}</span>
+  <header className="nameplate">
+    <div className="nameplate__title">
+      <h1>Milestone</h1>
+      <span className="nameplate__network">{networkConfig.networkId}</span>
     </div>
-    <div className="wallet-bar__actions">
+    <div className="nameplate__actions">
       {isConnected && wallet ? (
         <>
-          <span className="wallet-bar__address" title={wallet.unshieldedAddress}>
+          <span className="nameplate__address" title={wallet.unshieldedAddress}>
             {wallet.walletName}: {shorten(wallet.unshieldedAddress)}
           </span>
           <button onClick={onDisconnect} disabled={!!busy}>

@@ -1,43 +1,97 @@
 :root {
-  color-scheme: light dark;
-  font-family: system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+
+  --cork: #8a5a34;
+  --cork-dark: #6b4326;
+  --cork-speck: rgba(40, 22, 6, 0.25);
+
+  --paper: #f7efd8;
+  --paper-edge: #e6d8ac;
+  --paper-shadow: rgba(35, 22, 8, 0.35);
+
+  --ink: #2c2013;
+  --ink-soft: #6b5a42;
+
+  --pin-coral: #c1502e;
+  --pin-teal: #2f6f65;
+  --pin-gold: #b9861f;
+  --pin-plum: #6a4a6e;
+
+  --brass: #cba85a;
+  --brass-dark: #8a6a2c;
+
+  --font-hand: "Kalam", "Comic Sans MS", cursive;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  background: #0b0b12;
-  color: #e8e8f0;
-}
-
-code {
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
-  word-break: break-all;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background-color: var(--cork);
+  background-image:
+    radial-gradient(var(--cork-speck) 1px, transparent 1px),
+    radial-gradient(var(--cork-speck) 1px, transparent 1px),
+    linear-gradient(160deg, var(--cork) 0%, var(--cork-dark) 100%);
+  background-size:
+    23px 23px,
+    31px 31px,
+    100% 100%;
+  background-position:
+    0 0,
+    11px 14px,
+    0 0;
 }
 
 a {
-  color: #8ab4ff;
+  color: var(--pin-teal);
 }
 
 button {
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: #1b1b28;
-  color: inherit;
-  padding: 0.5em 1em;
-  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 4px;
+  padding: 0.6em 1.1em;
+  background: var(--brass);
+  color: var(--cork-dark);
+  box-shadow: 0 2px 0 var(--brass-dark);
+  transition: transform 0.08s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 var(--brass-dark);
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
+textarea,
 input {
-  background: #14141e;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: inherit;
-  padding: 0.5em;
-  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+code {
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  word-break: break-all;
 }

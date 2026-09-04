@@ -33,8 +33,9 @@ export type DeployedMilestoneContract =
   | FoundContract<MilestoneContract>;
 
 export type MilestonePost = {
+  id: bigint;
+  parentId: bigint;
   author: string;
-  tier: bigint;
   label: string;
 };
 
@@ -48,7 +49,7 @@ const milestoneCompiledContract = CompiledContract.make(
   CompiledContract.withCompiledFileAssets(zkConfigBaseUrl),
 );
 
-/** Read the public celebration feed + total count directly from the chain. */
+/** Read the public forum feed + post count directly from the chain. */
 export const getMilestoneLedgerState = async (
   providers: MilestoneProviders,
   contractAddress: ContractAddress,
@@ -58,11 +59,12 @@ export const getMilestoneLedgerState = async (
   if (state == null) return null;
   const l = Milestone.ledger(state.data);
   return {
-    totalCelebrated: l.totalCelebrated,
+    postCount: l.postCount,
     feed: [...l.feed].map(
       (post): MilestonePost => ({
+        id: post.id,
+        parentId: post.parentId,
         author: toHex(post.author),
-        tier: post.tier,
         label: post.label,
       }),
     ),
@@ -98,11 +100,26 @@ export const joinContract = async (
     initialPrivateState: createMilestonePrivateState(identitySecretKey),
   });
 
-export const celebrate = async (
+export const post = async (
   contract: DeployedMilestoneContract,
-  percent: bigint,
   label: string,
 ): Promise<FinalizedTxData> => {
-  const finalizedTxData = await contract.callTx.celebrate(percent, label);
+  const finalizedTxData = await contract.callTx.post(label);
   return finalizedTxData.public;
 };
+
+export const reply = async (
+  contract: DeployedMilestoneContract,
+  parentId: bigint,
+  label: string,
+): Promise<FinalizedTxData> => {
+  const finalizedTxData = await contract.callTx.reply(parentId, label);
+  return finalizedTxData.public;
+};
+
+/**
+ * Pure, off-chain mirror of the contract's publicKey circuit — lets the UI
+ * show a visitor their own pseudonym without needing a transaction.
+ */
+export const derivePseudonym = (identitySecretKey: Uint8Array): string =>
+  toHex(Milestone.pureCircuits.publicKey(identitySecretKey));
