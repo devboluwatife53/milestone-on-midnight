@@ -150,6 +150,16 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
     CONTRACT_ADDRESS=<address> npm run status:preview
     ```
 
+**A note on wallet sync time**: every CLI script re-syncs the wallet's
+full transaction history against Preview/Preprod from scratch (nothing
+is cached between runs), so a wallet with prior activity — like one
+that's already deployed or posted before — can take 15-20 minutes to
+resync before it does anything else. A `Wallet.Sync: [object Object]`
+line logged partway through is a transient, non-fatal warning from the
+underlying wallet SDK — the sync keeps going. A fresh wallet (no
+`WALLET_SEED` set) has no history and syncs almost instantly, at the
+cost of needing a faucet fund before its first deploy.
+
 ## Frontend — Lace wallet DApp
 
 `frontend/` is a Vite + React app that connects to Lace via the [DApp
