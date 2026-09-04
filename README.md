@@ -1,34 +1,39 @@
-# Milestone — a public forum for celebrating private milestones on Midnight
+# Milestone — a public wall for celebrating wins on Midnight
 
 ## Product idea
 
-Milestone is a public celebration wall built with Compact. Anyone can
-connect a wallet and log private percentage progress (1-100%) toward a
-personal goal — money saved, distance run, whatever they're privately
-tracking. The percentage itself is never written to the ledger. The moment
-their private running total crosses a full 100% (one completed goal), a
-post is disclosed to a shared public feed: the achievement they chose to
-share ("got a new car") and the tier they reached — never the number
-behind it. It's a small, concrete illustration of the core Midnight
-pattern: keep sensitive inputs private by default, and only reveal exactly
-the fact the application actually needs the world to see — nothing more.
+Milestone is a public forum built with Compact: connect a wallet, drop a
+milestone you're celebrating — "ran my first 5k", "shipped a side
+project" — and it's pinned to a shared wall for everyone to see. Anyone
+else can reply to congratulate you or share their own spin, threaded
+under your post. Every post and reply lands on chain in real time; there's
+no hidden accumulator, no threshold to cross.
+
+Where Midnight comes in: the wall never learns *who* you are. Each post is
+authored under a pseudonym — a one-way hash of a private key that never
+leaves your device — so the contract can prove every post came from a
+real, consistent author without ever disclosing a wallet address, a name,
+or a way to link two different pseudonyms to the same person. It's a
+small, concrete illustration of the core Midnight pattern: keep sensitive
+inputs private by default, and only reveal exactly the fact the
+application actually needs the world to see — nothing more.
 
 ## Deployed contract
 
 - Network: **Preview**
-- Contract address: [`bcba496b7ad530891b78ac81316fb8f75eee797aa67a3082b1025afc4d8ab345`](https://preview.midnightexplorer.com/contracts/bcba496b7ad530891b78ac81316fb8f75eee797aa67a3082b1025afc4d8ab345) — view live on Midnight Explorer
+- Contract address: `PLACEHOLDER_CONTRACT_ADDRESS` — view live on [Midnight Explorer](https://preview.midnightexplorer.com/contracts/PLACEHOLDER_CONTRACT_ADDRESS)
 - Verify independently at any time (no wallet needed, reads the indexer directly):
   ```bash
-  CONTRACT_ADDRESS=bcba496b7ad530891b78ac81316fb8f75eee797aa67a3082b1025afc4d8ab345 npm run status:preview
+  CONTRACT_ADDRESS=PLACEHOLDER_CONTRACT_ADDRESS npm run status:preview
   ```
 
 ## Live demo
 
-**[milestone-on-midnight.vercel.app](https://milestone-on-midnight.vercel.app)** — connect Lace (Preview network) and celebrate a milestone.
+**[milestone-on-midnight.vercel.app](https://milestone-on-midnight.vercel.app)** — connect Lace (Preview network), drop a milestone, and reply to someone else's.
 
 ## Demo video
 
-`TODO: link a short recording of wallet connect + a successful celebrate() call landing on the wall.`
+`TODO: link a short recording of wallet connect + a successful post() call landing on the wall.`
 
 ## Public state vs. private witness
 
@@ -36,45 +41,46 @@ Compact splits contract data into two worlds that never mix unless you say
 so explicitly:
 
 - **Public ledger state** (`contract/src/milestone.compact`): `feed` (the
-  public wall, a `List<MilestonePost>`) and `totalCelebrated` are declared
-  with `export ledger`. These are readable by anyone querying the chain —
-  that's the entire point of putting them there.
-- **Private witness state**: the caller's `secretKey`, their running
-  `hiddenProgress`, and how many personal tiers they've already crossed
-  never appear in the ledger. They live only in the caller's local private
-  state (see `contract/src/witnesses.ts`), and are supplied to circuits via
-  `witness` declarations (`localSecretKey`, `addToHiddenProgress`,
-  `currentTier`, `advanceTier`). The compiler enforces this — any attempt
-  to write a witness-derived value to the ledger without wrapping it in
-  `disclose()` is a **compile error**.
+  public wall, a `List<MilestonePost>`) and `postCount` are declared with
+  `export ledger`. These are readable by anyone querying the chain —
+  that's the entire point of putting them there. Each `MilestonePost` on
+  the ledger carries an `id`, a `parentId` (`0` for a top-level post,
+  otherwise the id it's replying to), a pseudonymous `author`, and the
+  `label` text.
+- **Private witness state**: the caller's `secretKey` never appears in the
+  ledger. It lives only in the caller's local private state (see
+  `contract/src/witnesses.ts`) and is supplied to circuits via a single
+  `witness` declaration (`localSecretKey`). The compiler enforces the
+  boundary — any attempt to write a witness-derived value to the ledger
+  without wrapping it in `disclose()` is a **compile error**.
 
-The `celebrate` circuit shows the boundary in action: it takes a private
-percentage (1-100%), computes a new cumulative total from a witness, but
-only pushes a post to the public `feed` (and increments `totalCelebrated`)
-once that total crosses a full 100% (one completed goal). Every call below
-100% leaves zero trace on chain — not the percentage, not the achievement
-text, not even the fact that a call happened at all (beyond the
-transaction itself being submitted). The author on a disclosed post is a
-hash derived from the caller's own secret key via `publicKey()` —
-pseudonymous, provable, never tied to a real identity.
+The `post`/`reply` circuits show the boundary in action: both derive the
+caller's `author` pseudonym from their private secret key
+(`publicKey(localSecretKey())`) and disclose *that hash* to the ledger —
+never the key itself. The chain can verify every post came from someone
+holding a valid key, and that the same key always produces the same
+pseudonym, without ever learning what that key is or which wallet address
+it belongs to.
 
 ## Repo layout
 
 ```
 contract/          Compact contract, generated managed/ output, tests
   src/milestone.compact
-  src/witnesses.ts       private-state shape + witness implementations
+  src/witnesses.ts       private-state shape + witness implementation
   src/managed/milestone/ generated circuits, zkir, and prover/verifier keys
   src/test/               vitest suite against a local simulator
 cli/                Node-based deployment tooling (Preview + Preprod)
-  src/deploy-{preview,preprod}.ts     build/fund a wallet, deploy, print address
-  src/celebrate-{preview,preprod}.ts  call celebrate() from the CLI
-  src/join-{preview,preprod}.ts       read back the public feed, no wallet needed
+  src/deploy-{preview,preprod}.ts   build/fund a wallet, deploy, print address
+  src/post-{preview,preprod}.ts    call post() from the CLI
+  src/reply-{preview,preprod}.ts   call reply() from the CLI
+  src/join-{preview,preprod}.ts    read back the public wall, no wallet needed
   proof-server.yml       docker compose for the local proof server
 frontend/           Browser DApp — Lace wallet connect + circuit calls
   src/midnight/       DApp Connector ↔ midnight-js bridge (see below)
-  src/hooks/useMidnight.ts  connect/disconnect/join/celebrate state
-  src/components/     wallet bar, milestone feed (the wall), celebrate form
+  src/hooks/useMidnight.ts  connect/disconnect/join/post/reply state
+  src/components/     nameplate (wallet bar), pseudonym strip, compose card,
+                      threaded wall
 screenshots/        compile + deploy output
 ```
 
@@ -88,6 +94,9 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
    compact update            # fetches the latest compactc release
    compact --version
    ```
+   This project's `contract/` compiles with `compact 0.31.1` specifically
+   (pinned in `contract/package.json`'s `compact` script) to match its
+   pinned `@midnight-ntwrk/compact-runtime` dependency.
 2. **Use Node 22**:
    ```bash
    nvm install 22 && nvm use 22
@@ -121,20 +130,25 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
    ([Preview](https://faucet.preview.midnight.network/) /
    [Preprod](https://faucet.preprod.midnight.network/)) before deploying.
    **Save the printed seed and identity secret key** — reuse the identity
-   key to keep posting under the same pseudonymous author on the public
-   feed. To reuse an existing wallet on a later run:
+   key to keep posting under the same pseudonym on the public wall. To
+   reuse an existing wallet on a later run:
    ```bash
    WALLET_SEED=<hex seed> IDENTITY_SECRET_KEY=<hex key> npm run deploy:preprod
    ```
-8. **Log a milestone from the CLI** against an already-deployed contract:
+8. **Drop a milestone from the CLI** against an already-deployed contract:
    ```bash
    CONTRACT_ADDRESS=<address> WALLET_SEED=<hex> IDENTITY_SECRET_KEY=<hex> \
-     PERCENT=60 LABEL="got a new car" npm run celebrate:preprod
+     LABEL="got a new car" npm run post:preprod
    ```
-9. **Check a deployed contract's public feed** at any time:
+9. **Reply to an existing post**:
    ```bash
-   CONTRACT_ADDRESS=<address> npm run status:preview
+   CONTRACT_ADDRESS=<address> WALLET_SEED=<hex> IDENTITY_SECRET_KEY=<hex> \
+     PARENT_ID=1 LABEL="congrats!!" npm run reply:preprod
    ```
+10. **Check a deployed contract's public wall** at any time:
+    ```bash
+    CONTRACT_ADDRESS=<address> npm run status:preview
+    ```
 
 ## Frontend — Lace wallet DApp
 
@@ -143,7 +157,7 @@ Connector API](https://docs.midnight.network/api-reference/dapp-connector)
 (`@midnight-ntwrk/dapp-connector-api`) and calls the same contract as the
 CLI, from the browser. It always talks to one fixed, universally-known
 deployed contract (`VITE_CONTRACT_ADDRESS`) — there's no manual deploy/join
-UI — so connecting a wallet loads that contract's public feed automatically.
+UI — so connecting a wallet loads that contract's public wall automatically.
 
 ```bash
 cd frontend
@@ -173,17 +187,21 @@ browser can fetch them over HTTP.
   browser), fetches ZK artifacts over HTTP (`FetchZkConfigProvider`), and
   manages **local private state** in IndexedDB (`levelPrivateStateProvider`,
   scoped per connected wallet account).
-- `contract.ts` — deploy / join / `celebrate`, mirroring `cli/src/api.ts`
-  but running entirely client-side.
+- `contract.ts` — deploy / join / `post` / `reply` / `derivePseudonym`,
+  mirroring `cli/src/api.ts` but running entirely client-side.
 
-**Observable privacy behavior**: the celebrate form calls `celebrate()` for
-real every time — a proven, submitted transaction — but diffs
-`totalCelebrated` before and after. Submit a percentage that doesn't push
-your cumulative progress past 100% and the feed is provably unchanged: not
-hidden by the UI, but because the chain itself never received the number
-or the label. Submit progress that crosses 100% and your achievement
-appears at the top of the wall — but never the private percentage you
-typed to get there.
+**Observable privacy behavior**: connecting a wallet renders a
+"pseudonym strip" that shows your real unshielded wallet address next to
+the pin the wall actually uses for your posts — computed client-side by
+`derivePseudonym()`, the same `publicKey()` hash the contract itself
+proves in the circuit, with no network round-trip. The two values are
+never equal, and every post you make from that wallet carries the same
+pin, no matter how many times you reconnect. This is provable, not just
+asserted by the UI: `publicKey()` is an exported pure circuit, so anyone
+can independently recompute your pin from your (self-disclosed, if you
+choose) secret key and confirm it matches what's on chain — but nobody
+can go the other direction and recover your key, or your wallet address,
+from the pin alone.
 
 ## Screenshots
 
