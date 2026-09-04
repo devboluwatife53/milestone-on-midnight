@@ -13,13 +13,27 @@ export const renderFeedAsThreads = (feed: FeedPost[]): string => {
   if (feed.length === 0) return "  (the wall is empty — be the first to post)";
 
   const byId = new Map(feed.map((post) => [post.id, post]));
-  const repliesByParent = new Map<bigint, FeedPost[]>();
+
+  // Walk parentId up to the root post of the thread — a reply to a reply
+  // still belongs to the original thread, just flattened one level rather
+  // than nested arbitrarily deep.
+  const rootOf = (post: FeedPost): bigint => {
+    let current = post;
+    const seen = new Set<bigint>();
+    while (current.parentId !== 0n && byId.has(current.parentId) && !seen.has(current.id)) {
+      seen.add(current.id);
+      current = byId.get(current.parentId)!;
+    }
+    return current.id;
+  };
+
+  const repliesByRoot = new Map<bigint, FeedPost[]>();
   for (const post of feed) {
     if (post.parentId === 0n) continue;
-    if (!byId.has(post.parentId)) continue; // orphaned parentId, ignore
-    const siblings = repliesByParent.get(post.parentId) ?? [];
+    const root = rootOf(post);
+    const siblings = repliesByRoot.get(root) ?? [];
     siblings.push(post);
-    repliesByParent.set(post.parentId, siblings);
+    repliesByRoot.set(root, siblings);
   }
 
   const topLevel = feed
@@ -29,7 +43,7 @@ export const renderFeedAsThreads = (feed: FeedPost[]): string => {
   const lines: string[] = [];
   for (const post of topLevel) {
     lines.push(`  #${post.id} ${shortAuthor(post.author)} — ${post.label}`);
-    const replies = (repliesByParent.get(post.id) ?? []).sort(
+    const replies = (repliesByRoot.get(post.id) ?? []).sort(
       (a, b) => Number(a.id - b.id),
     );
     for (const reply of replies) {

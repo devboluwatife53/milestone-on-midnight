@@ -70,12 +70,27 @@ export const MilestoneFeed = ({
   }
 
   const byId = new Map(ledgerState.feed.map((post) => [post.id, post]));
-  const repliesByParent = new Map<bigint, MilestonePost[]>();
+
+  // Walk parentId up to the root post of the thread — a reply to a reply
+  // still belongs to the original thread, just flattened one level rather
+  // than rendered as its own nested sub-thread.
+  const rootOf = (post: MilestonePost): bigint => {
+    let current = post;
+    const seen = new Set<bigint>();
+    while (current.parentId !== 0n && byId.has(current.parentId) && !seen.has(current.id)) {
+      seen.add(current.id);
+      current = byId.get(current.parentId)!;
+    }
+    return current.id;
+  };
+
+  const repliesByRoot = new Map<bigint, MilestonePost[]>();
   for (const post of ledgerState.feed) {
-    if (post.parentId === 0n || !byId.has(post.parentId)) continue;
-    const siblings = repliesByParent.get(post.parentId) ?? [];
+    if (post.parentId === 0n) continue;
+    const root = rootOf(post);
+    const siblings = repliesByRoot.get(root) ?? [];
     siblings.push(post);
-    repliesByParent.set(post.parentId, siblings);
+    repliesByRoot.set(root, siblings);
   }
   const topLevel = ledgerState.feed
     .filter((post) => post.parentId === 0n)
@@ -88,7 +103,7 @@ export const MilestoneFeed = ({
   return (
     <div className="feed">
       {topLevel.map((post) => {
-        const replies = (repliesByParent.get(post.id) ?? []).sort(
+        const replies = (repliesByRoot.get(post.id) ?? []).sort(
           (a, b) => Number(a.id - b.id),
         );
         return (
