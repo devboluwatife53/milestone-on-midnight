@@ -80,7 +80,7 @@ export const milestoneContractInstance: MilestoneContract = new Milestone.Contra
   witnesses,
 );
 
-/** Read the public celebration feed + total count directly from the chain. */
+/** Read the public forum feed + post count directly from the chain. */
 export const getMilestoneLedgerState = async (
   providers: MilestoneProviders,
   contractAddress: ContractAddress,
@@ -90,10 +90,11 @@ export const getMilestoneLedgerState = async (
   if (state == null) return null;
   const l = Milestone.ledger(state.data);
   return {
-    totalCelebrated: l.totalCelebrated,
+    postCount: l.postCount,
     feed: [...l.feed].map((post) => ({
+      id: post.id,
+      parentId: post.parentId,
       author: toHex(post.author),
-      tier: post.tier,
       label: post.label,
     })),
   };
@@ -124,12 +125,20 @@ export const joinContract = async (
     initialPrivateState: createMilestonePrivateState(secretKey),
   });
 
-export const celebrate = async (
+export const post = async (
   contract: DeployedMilestoneContract,
-  percent: bigint,
   label: string,
 ): Promise<FinalizedTxData> => {
-  const finalizedTxData = await contract.callTx.celebrate(percent, label);
+  const finalizedTxData = await contract.callTx.post(label);
+  return finalizedTxData.public;
+};
+
+export const reply = async (
+  contract: DeployedMilestoneContract,
+  parentId: bigint,
+  label: string,
+): Promise<FinalizedTxData> => {
+  const finalizedTxData = await contract.callTx.reply(parentId, label);
   return finalizedTxData.public;
 };
 
@@ -356,8 +365,8 @@ ${DIV}
 ${DIV}
   ${seed}
 ${DIV}
-  Identity secret key (also save this — reuse it to keep celebrating under
-  the same pseudonymous author on the public feed)
+  Identity secret key (also save this — reuse it to keep posting under
+  the same pseudonymous author on the public wall)
 ${DIV}
   ${toHex(Buffer.from(identitySecretKey))}
 ${DIV}

@@ -6,10 +6,12 @@
   "scripts": {
     "proof-server": "docker compose -f proof-server.yml up",
     "deploy:preview": "node --no-warnings --loader ts-node/esm src/deploy-preview.ts",
-    "celebrate:preview": "node --no-warnings --loader ts-node/esm src/celebrate-preview.ts",
+    "post:preview": "node --no-warnings --loader ts-node/esm src/post-preview.ts",
+    "reply:preview": "node --no-warnings --loader ts-node/esm src/reply-preview.ts",
     "status:preview": "node --no-warnings --loader ts-node/esm src/join-preview.ts",
     "deploy:preprod": "node --no-warnings --loader ts-node/esm src/deploy-preprod.ts",
-    "celebrate:preprod": "node --no-warnings --loader ts-node/esm src/celebrate-preprod.ts",
+    "post:preprod": "node --no-warnings --loader ts-node/esm src/post-preprod.ts",
+    "reply:preprod": "node --no-warnings --loader ts-node/esm src/reply-preprod.ts",
     "status:preprod": "node --no-warnings --loader ts-node/esm src/join-preprod.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
