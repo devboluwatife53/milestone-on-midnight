@@ -99,6 +99,26 @@ export const useMidnight = () => {
     [],
   );
 
+  const waitForIndexer = useCallback(
+    async (
+      address: string,
+      currentProviders: MilestoneProviders,
+      expectedPostCount: bigint,
+      maxAttempts = 10,
+      delayMs = 1500,
+    ) => {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise((r) => setTimeout(r, delayMs));
+        const state = await getMilestoneLedgerState(currentProviders, address);
+        if (state && state.postCount >= expectedPostCount) {
+          return state;
+        }
+      }
+      return getMilestoneLedgerState(currentProviders, address);
+    },
+    [],
+  );
+
   const join = useCallback(
     async (address: string, identitySecretKeyOverride?: string) => {
       if (!providers) return;
@@ -131,14 +151,17 @@ export const useMidnight = () => {
       try {
         const tx = await postCircuit(contract, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
-        await refreshLedgerState(contractAddress, providers);
+        const currentState = await getMilestoneLedgerState(providers, contractAddress);
+        const expectedCount = (currentState?.postCount ?? 0n) + 1n;
+        const updatedState = await waitForIndexer(contractAddress, providers, expectedCount);
+        setLedgerState(updatedState);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
         setBusy(null);
       }
     },
-    [contract, providers, contractAddress, refreshLedgerState],
+    [contract, providers, contractAddress, waitForIndexer],
   );
 
   const reply = useCallback(
@@ -149,14 +172,17 @@ export const useMidnight = () => {
       try {
         const tx = await replyCircuit(contract, parentId, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
-        await refreshLedgerState(contractAddress, providers);
+        const currentState = await getMilestoneLedgerState(providers, contractAddress);
+        const expectedCount = (currentState?.postCount ?? 0n) + 1n;
+        const updatedState = await waitForIndexer(contractAddress, providers, expectedCount);
+        setLedgerState(updatedState);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
         setBusy(null);
       }
     },
-    [contract, providers, contractAddress, refreshLedgerState],
+    [contract, providers, contractAddress, waitForIndexer],
   );
 
   // The app targets a single, universally-known deployed contract — no
