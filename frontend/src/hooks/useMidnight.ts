@@ -147,7 +147,7 @@ export const useMidnight = () => {
     async (label: string) => {
       if (!contract || !providers || !contractAddress) return;
       setError(null);
-      setBusy("Proving + pinning your milestone via Lace...");
+      setBusy("Proving + pinning your milestone via Wallet...");
       try {
         const tx = await postCircuit(contract, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
@@ -168,7 +168,7 @@ export const useMidnight = () => {
     async (parentId: bigint, label: string) => {
       if (!contract || !providers || !contractAddress) return;
       setError(null);
-      setBusy("Proving + pinning your reply via Lace...");
+      setBusy("Proving + pinning your reply via Wallet...");
       try {
         const tx = await replyCircuit(contract, parentId, label);
         setLastTx({ txId: tx.txId, blockHeight: tx.blockHeight });
