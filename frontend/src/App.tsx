@@ -22,7 +22,7 @@ export const App = () => {
 
       {!m.isConnected ? (
         <p className="intro">
-          Connect Lace and drop a milestone — everyone posts under a pin,
+          Connect Wallet and drop a milestone — everyone posts under a pin,
           never their wallet address.
         </p>
       ) : (

@@ -34,7 +34,7 @@ export const WalletBar = ({
         </>
       ) : (
         <button onClick={onConnect} disabled={!!busy}>
-          {busy ?? "Connect Lace"}
+          {busy ?? "Connect Wallet"}
         </button>
       )}
     </div>
