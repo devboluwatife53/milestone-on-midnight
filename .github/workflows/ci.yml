@@ -21,6 +21,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Compact toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Compile contract (Compact -> managed circuits)
+        run: |
+          compact update 0.31.1
+          compact --version
+          npm run compact
+        working-directory: ./contract
+
       - name: Run contract tests
         run: npm test
         working-directory: ./contract

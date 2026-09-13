@@ -92,8 +92,8 @@ Prerequisites: macOS/Linux, [Docker](https://www.docker.com/), Node.js 22.
 
 1. **Install the Compact toolchain** (compiler + CLI):
    ```bash
-   curl --proto '=https' --tlsv1.2 -LsSf https://raw.githubusercontent.com/midnightntwrk/compact/main/install.sh | sh
-   compact update            # fetches the latest compactc release
+   curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+   compact update 0.31.1     # this project pins compactc 0.31.1
    compact --version
    ```
    This project's `contract/` compiles with `compact 0.31.1` specifically
